@@ -6,8 +6,8 @@ plugins {
     id("maven-publish")
 }
 
-group = "no.nav.helsearbeidsgiver.utils"
-version = "0.1.0"
+group = "no.nav.helsearbeidsgiver"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -76,6 +76,7 @@ tasks.withType<KotlinCompile> {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
 }
 
 fun RepositoryHandler.mavenNav(repo: String): MavenArtifactRepository {
