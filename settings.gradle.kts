@@ -1,4 +1,4 @@
-rootProject.name = "hag-bgjobb"
+rootProject.name = "hag-bakgrunnsjobb"
 
 pluginManagement {
     val kotlinVersion: String by settings
