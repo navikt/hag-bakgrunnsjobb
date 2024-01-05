@@ -1,3 +1,5 @@
+rootProject.name = "hag-bgjobb"
+
 pluginManagement {
     repositories {
         mavenCentral()
@@ -5,5 +7,5 @@ pluginManagement {
     }
     
 }
-rootProject.name = "hag-bgjobb"
+
 

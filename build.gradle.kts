@@ -3,20 +3,25 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.9.21"
     kotlin("plugin.serialization") version "1.9.21"
+    id("maven-publish")
 }
 
 group = "no.nav.helsearbeidsgiver.utils"
 version = "0.1.0"
 
 repositories {
-    val githubPassword: String by project
     mavenCentral()
-    maven {
-        setUrl("https://maven.pkg.github.com/navikt/*")
-        credentials {
-            username = "x-access-token"
-            password = githubPassword
+    mavenNav("*")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
         }
+    }
+    repositories {
+        mavenNav("${rootProject.name}")
     }
 }
 
@@ -71,4 +76,16 @@ tasks.withType<KotlinCompile> {
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+fun RepositoryHandler.mavenNav(repo: String): MavenArtifactRepository {
+    val githubPassword: String by project
+
+    return maven {
+        setUrl("https://maven.pkg.github.com/navikt/$repo")
+        credentials {
+            username = "x-access-token"
+            password = githubPassword
+        }
+    }
 }
