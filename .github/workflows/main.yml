@@ -1,4 +1,4 @@
-name: Build and publish
+name: Build
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 jobs:
   build:
-    name: Build and push
+    name: Build
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -25,7 +25,7 @@ jobs:
         run: cd docker/local && docker-compose up -d && sleep 10
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build test --console=plain
         env:
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
 
