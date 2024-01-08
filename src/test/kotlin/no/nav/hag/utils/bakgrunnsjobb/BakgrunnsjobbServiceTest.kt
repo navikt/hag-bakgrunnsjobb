@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-@Disabled
 class BakgrunnsjobbServiceTest {
 
     private val dataSource = HikariDataSource(createLocalHikariConfig())
@@ -26,6 +25,13 @@ class BakgrunnsjobbServiceTest {
     private val now = LocalDateTime.now()
     private val eksempelProsesserer = EksempelProsesserer()
 
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun migrateDb(): Unit {
+            Database(createLocalHikariConfig()).migrate()
+        }
+    }
     @BeforeEach
     internal fun setup() {
         service.registrer(eksempelProsesserer)
@@ -132,14 +138,6 @@ class BakgrunnsjobbServiceTest {
         fun teardown() {
             repository.deleteAll()
         }
-
-    companion object {
-        @JvmStatic
-        @BeforeAll
-        fun migrateDb(): Unit {
-            Database(createLocalHikariConfig()).migrate()
-        }
-    }
 
 }
 
