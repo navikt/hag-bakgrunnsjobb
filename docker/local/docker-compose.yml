@@ -1,7 +1,7 @@
 version: '3.4'
 
 services:
-  bgjobb-database:
+  bgjobb:
     build:
       context: ./postgres
       dockerfile: postgres.Dockerfile
