@@ -26,6 +26,10 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build test --console=plain
+
+        env:
+          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+      - name: Salsa
         uses: nais/docker-build-push@v0
         id: docker-push
         with:
@@ -33,8 +37,6 @@ jobs:
           salsa: true # optional, defaults to true
           project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
           identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization secret
-        env:
-          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cleanup Gradle Cache
         # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
