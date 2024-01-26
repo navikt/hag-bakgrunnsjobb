@@ -21,6 +21,10 @@ gradle build
 
 ---
 
+# Releasing
+Bump version i build.gradle.kts og push til main
+Gjør deretter release fra github-gui, versjon settes lik som versjon i build-fila.
+
 # Henvendelser
 
 Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub
