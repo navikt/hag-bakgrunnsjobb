@@ -7,7 +7,7 @@ Det er mulig å konfigurere rekjøring ved feil.
 Koden er trukket ut fra hag-felles-backend-biblioteket (deprecated) og oppgradert til ktor2.
 En del andre 3.parts avhengigheter er ikke oppgradert til nyeste versjon pga bakoverkompabilitet og  
 for å kunne erstatte felles-versjonen med denne utgaven enklest mulig. 
-Etter release av hag-bgjobb 1.0, vil tredjeparts biblioteker bli oppgradert 
+Etter release av hag-bgjobb 1.0.4, vil tredjeparts biblioteker bli oppgradert 
 
 # Komme i gang
 
