@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v3
@@ -31,14 +29,6 @@ jobs:
 
         env:
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
-      - name: Salsa
-        uses: nais/docker-build-push@v0
-        id: docker-push
-        with:
-          team: helsearbeidsgiver # required
-          salsa: true # optional, defaults to true
-          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
-          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization secret
 
       - name: Cleanup Gradle Cache
         # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
