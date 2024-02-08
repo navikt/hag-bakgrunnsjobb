@@ -19,6 +19,25 @@ docker-compose up --remove-orphans
 
 gradle build
 
+For å ta i bruk: Importer biblioteket (gradle):
+````
+implementation("no.nav.helsearbeidsgiver:hag-bakgrunnsjobb:$bakgrunnsjobbVersion")
+````
+
+Kopier sql-scripts fra resources for å opprette databasetabeller
+
+Lag en eller flere jobber som du ønsker å kjøre - disse må implementere BakgrunnsjobbProsesserer
+
+Ved oppstart av applikasjon: 
+
+Instansier en BakgrunnsjobbService, registrer prosessor(er) og start:
+
+```
+val bgService = BakgrunnsjobbService()
+bgService.registrer(MinProcessor())
+bgService.startAsync(retryOnFail = true)
+```
+
 ---
 
 # Releasing
