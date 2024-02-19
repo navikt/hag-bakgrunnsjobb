@@ -26,43 +26,39 @@ interface BakgrunnsjobbRepository {
 
 class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
 
-    private val jobs = mutableListOf<Bakgrunnsjobb>()
+    private val jobs = mutableMapOf<UUID, Bakgrunnsjobb>()
 
     override fun getById(id: UUID): Bakgrunnsjobb? {
-        if (jobs.filter { it.uuid.equals(id) }.size.equals(1)) {
-            return jobs.filter { it.uuid.equals(id) }.get(0)
-        } else {
-            return null
-        }
+        return jobs[id]
     }
 
-    override fun save(bakgrunnsjobb: Bakgrunnsjobb) {
-        jobs.add(bakgrunnsjobb)
+    override fun save(bakgrunnsjobb: Bakgrunnsjobb) { //TODO?? mock-impl håndterer ikke duplikater likt som ekte impl
+        jobs.put(bakgrunnsjobb.uuid, bakgrunnsjobb)
     }
 
     override fun save(bakgrunnsjobb: Bakgrunnsjobb, connection: Connection) {
-        jobs.add(bakgrunnsjobb)
+        save(bakgrunnsjobb)
     }
 
     override fun findAutoCleanJobs(): List<Bakgrunnsjobb> {
-        return jobs.filter { it.type.equals(AutoCleanJobbProcessor.JOB_TYPE) }
+        return jobs.values.filter { it.type.equals(AutoCleanJobbProcessor.JOB_TYPE) }
     }
 
     override fun findOkAutoCleanJobs(): List<Bakgrunnsjobb> {
-        return jobs.filter { it.type.equals(AutoCleanJobbProcessor.JOB_TYPE) }
+        return jobs.values.filter { it.type.equals(AutoCleanJobbProcessor.JOB_TYPE) }
     }
 
     override fun findByKjoeretidBeforeAndStatusIn(timeout: LocalDateTime, tilstander: Set<BakgrunnsjobbStatus>, alle: Boolean): List<Bakgrunnsjobb> {
-        return jobs.filter { tilstander.contains(it.status) }
+        return jobs.values.filter { tilstander.contains(it.status) }
             .filter { it.kjoeretid.isBefore(timeout) }
     }
 
     override fun delete(uuid: UUID) {
-        jobs.removeIf { it.uuid == uuid }
+        jobs.remove(uuid)
     }
 
     override fun deleteAll() {
-        jobs.removeAll { true }
+        jobs.clear()
     }
 
     override fun update(bakgrunnsjobb: Bakgrunnsjobb) {
@@ -76,7 +72,13 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
 
     override fun deleteOldOkJobs(months: Long) {
         val someMonthsAgo = LocalDateTime.now().minusMonths(months)
-        jobs.removeIf { it.behandlet?.isBefore(someMonthsAgo)!! && it.status.equals(BakgrunnsjobbStatus.OK) }
+        jobs.values.filter {
+            it.behandlet?.isBefore(someMonthsAgo) == true && it.status.equals(BakgrunnsjobbStatus.OK)
+        }
+        .map { it.uuid }
+        .forEach {
+            jobs.remove(it)
+        }
     }
 }
 
