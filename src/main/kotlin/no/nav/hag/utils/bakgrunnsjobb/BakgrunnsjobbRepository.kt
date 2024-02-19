@@ -41,16 +41,16 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
     }
 
     override fun findAutoCleanJobs(): List<Bakgrunnsjobb> {
-        return jobs.values.filter { it.type.equals(AutoCleanJobbProcessor.JOB_TYPE) }.toList()
+        return jobs.values.filter { it.type.equals(AutoCleanJobbProcessor.JOB_TYPE) }
     }
 
     override fun findOkAutoCleanJobs(): List<Bakgrunnsjobb> {
-        return jobs.values.filter { it.type.equals(AutoCleanJobbProcessor.JOB_TYPE) }.toList()
+        return jobs.values.filter { it.type.equals(AutoCleanJobbProcessor.JOB_TYPE) }
     }
 
     override fun findByKjoeretidBeforeAndStatusIn(timeout: LocalDateTime, tilstander: Set<BakgrunnsjobbStatus>, alle: Boolean): List<Bakgrunnsjobb> {
         return jobs.values.filter { tilstander.contains(it.status) }
-            .filter { it.kjoeretid.isBefore(timeout) }.toList()
+            .filter { it.kjoeretid.isBefore(timeout) }
     }
 
     override fun delete(uuid: UUID) {
@@ -72,7 +72,11 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
 
     override fun deleteOldOkJobs(months: Long) {
         val someMonthsAgo = LocalDateTime.now().minusMonths(months)
-        jobs.values.filter {  it.behandlet?.isBefore(someMonthsAgo)!! && it.status.equals(BakgrunnsjobbStatus.OK) }.map { it.uuid }.forEach {
+        jobs.values.filter {
+            it.behandlet?.isBefore(someMonthsAgo) == true && it.status.equals(BakgrunnsjobbStatus.OK)
+        }
+        .map { it.uuid }
+        .forEach {
             jobs.remove(it)
         }
     }
