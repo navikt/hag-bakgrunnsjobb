@@ -97,11 +97,11 @@ class BakgrunnsjobbServiceTest {
         var exception = Assertions.assertThrows(IllegalArgumentException::class.java) {
             service.startAutoClean(-1, 3)
         }
-        Assertions.assertEquals("start autoclean må ha en frekvens støtte enn 1 og slettEldreEnnMaander større enn 0", exception.message)
+        Assertions.assertEquals("start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0", exception.message)
         exception = Assertions.assertThrows(IllegalArgumentException::class.java) {
             service.startAutoClean(1, -1)
         }
-        Assertions.assertEquals("start autoclean må ha en frekvens støtte enn 1 og slettEldreEnnMaander større enn 0", exception.message)
+        Assertions.assertEquals("start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0", exception.message)
         assertThat(repository.findAutoCleanJobs()).hasSize(0)
     }
 

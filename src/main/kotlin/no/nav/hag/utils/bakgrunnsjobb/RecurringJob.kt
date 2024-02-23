@@ -15,7 +15,7 @@ abstract class RecurringJob(
     protected var isRunning = false
 
     fun startAsync(retryOnFail: Boolean = false) {
-        logger.debug("Starter opp")
+        logger.info("Starter opp")
         isRunning = true
         scheduleAsyncJobRun(retryOnFail)
     }
@@ -39,7 +39,7 @@ abstract class RecurringJob(
                     scheduleAsyncJobRun(retryOnFail)
                 }
             } else {
-                logger.debug("Stoppet.")
+                logger.info("Stoppet.")
             }
         }
     }

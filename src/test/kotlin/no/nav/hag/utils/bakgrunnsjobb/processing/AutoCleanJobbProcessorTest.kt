@@ -17,11 +17,11 @@ import java.util.UUID
 class AutoCleanJobbProcessorTest {
 
     val now = LocalDateTime.now()
-    val uuid = UUID.randomUUID()
     lateinit var autoCleanJobbProcessor: AutoCleanJobbProcessor
     lateinit var bakgrunnsjobbRepository: BakgrunnsjobbRepository
+    lateinit var bakgrunnsjobbService: BakgrunnsjobbService
     val bakgrunnsjobbSlettEldreEnn10 = Bakgrunnsjobb(
-        uuid,
+        UUID.randomUUID(),
         AutoCleanJobbProcessor.JOB_TYPE,
         now,
         now,
@@ -33,7 +33,7 @@ class AutoCleanJobbProcessorTest {
 
     )
     val bakgrunnsjobbSlettEldreEnn2 = Bakgrunnsjobb(
-        uuid,
+        UUID.randomUUID(),
         AutoCleanJobbProcessor.JOB_TYPE,
         now,
         now,
@@ -44,7 +44,7 @@ class AutoCleanJobbProcessorTest {
         "{\"slettEldre\": \"2\",\"interval\": \"3\"}"
     )
     val bakgrunnsjobb3mndGammel = Bakgrunnsjobb(
-        uuid,
+        UUID.randomUUID(),
         "test",
         now.minusMonths(3),
         now.minusMonths(3),
@@ -59,7 +59,7 @@ class AutoCleanJobbProcessorTest {
     fun setUp() {
         bakgrunnsjobbRepository = MockBakgrunnsjobbRepository()
         val testScope = TestScope()
-        val bakgrunnsjobbService = BakgrunnsjobbService(bakgrunnsjobbRepository, 1, testScope)
+        bakgrunnsjobbService = BakgrunnsjobbService(bakgrunnsjobbRepository, 1, testScope)
         val objectMapper = ObjectMapper()
         objectMapper.registerModule(KotlinModule())
         autoCleanJobbProcessor = AutoCleanJobbProcessor(bakgrunnsjobbRepository, bakgrunnsjobbService, objectMapper)
@@ -88,5 +88,15 @@ class AutoCleanJobbProcessorTest {
         autoCleanJobbProcessor.prosesser(bakgrunnsjobbSlettEldreEnn2)
         Assertions.assertThat(bakgrunnsjobb3mndGammel.uuid == (bakgrunnsjobbRepository.getById(bakgrunnsjobb3mndGammel.uuid))?.uuid)
             .isFalse()
+    }
+
+    @Test
+    fun stoppeBakgrunnsserviceStopperNySkeduleringAvAutoclean() {
+        bakgrunnsjobbRepository.save(bakgrunnsjobb3mndGammel)
+        autoCleanJobbProcessor.prosesser(bakgrunnsjobbSlettEldreEnn2)
+        Assertions.assertThat(bakgrunnsjobbRepository.findAutoCleanJobs().size == 1)
+        bakgrunnsjobbService.stop()
+        autoCleanJobbProcessor.prosesser(bakgrunnsjobbSlettEldreEnn2)
+        Assertions.assertThat(bakgrunnsjobbRepository.findAutoCleanJobs().size == 0)
     }
 }

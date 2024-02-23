@@ -24,38 +24,37 @@ class BakgrunnsjobbService(
 
     val prossesserere = HashMap<String, BakgrunnsjobbProsesserer>()
 
+    private val om = ObjectMapper().apply {
+        registerKotlinModule()
+        disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        dateFormat = StdDateFormat()
+    }
     fun startAutoClean(frekvensITimer: Int, slettEldreEnnMaaneder: Long) {
-        val om = ObjectMapper().apply {
-            registerKotlinModule()
-            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            dateFormat = StdDateFormat()
-        }
+
         if (frekvensITimer < 1 || slettEldreEnnMaaneder < 0) {
             logger.info("startautoclean forsøkt startet med ugyldige parametre.")
-            throw java.lang.IllegalArgumentException("start autoclean må ha en frekvens støtte enn 1 og slettEldreEnnMaander større enn 0")
+            throw java.lang.IllegalArgumentException("start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0")
         }
+        if (isRunning) {
+            val autocleanjobber = bakgrunnsjobbRepository.findAutoCleanJobs()
 
-        val autocleanjobber = bakgrunnsjobbRepository.findAutoCleanJobs()
-
-        if (autocleanjobber.isEmpty()) {
-            bakgrunnsjobbRepository.save(
-                Bakgrunnsjobb(
-                    kjoeretid = LocalDateTime.now().plusHours(frekvensITimer.toLong()),
-                    maksAntallForsoek = 10,
-                    data = om.writeValueAsString(AutoCleanJobbProcessor.JobbData(slettEldreEnnMaaneder, frekvensITimer)),
-                    type = JOB_TYPE
+            if (autocleanjobber.isEmpty()) {
+                bakgrunnsjobbRepository.save(
+                    Bakgrunnsjobb(
+                        kjoeretid = LocalDateTime.now().plusHours(frekvensITimer.toLong()),
+                        maksAntallForsoek = 10,
+                        data = om.writeValueAsString(AutoCleanJobbProcessor.JobbData(slettEldreEnnMaaneder, frekvensITimer)),
+                        type = JOB_TYPE
+                    )
                 )
-            )
+            } else {
+                val ekisterendeAutoCleanJobb = autocleanjobber.get(0)
+                bakgrunnsjobbRepository.delete(ekisterendeAutoCleanJobb.uuid)
+                startAutoClean(frekvensITimer, slettEldreEnnMaaneder)
+            }
         } else {
-            val ekisterendeAutoCleanJobb = autocleanjobber.get(0)
-            bakgrunnsjobbRepository.delete(ekisterendeAutoCleanJobb.uuid)
-            startAutoClean(frekvensITimer, slettEldreEnnMaaneder)
+            logger.warn("BakgrunnsjobbService er stoppet, kjører ikke autoclean!")
         }
-    }
-
-    @Deprecated("Bruk registrer(..)")
-    fun leggTilBakgrunnsjobbProsesserer(type: String, prosesserer: BakgrunnsjobbProsesserer) {
-        prossesserere[type] = prosesserer
     }
 
     fun registrer(prosesserer: BakgrunnsjobbProsesserer) {
