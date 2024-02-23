@@ -20,11 +20,11 @@ internal class RecurringJobTest {
         job.startAsync()
         testCoroutineScope.testScheduler.apply { advanceTimeBy(1); runCurrent() }
 
-        assertThat(job.getJobCompletedCounter()).isEqualTo(1)
+        assertThat(job.getJobCompletedCounter()).isEqualTo(0)
 
         testCoroutineScope.testScheduler.apply { advanceTimeBy(delay); runCurrent() }
 
-        assertThat(job.getJobCompletedCounter()).isEqualTo(2)
+        assertThat(job.getJobCompletedCounter()).isEqualTo(1)
     }
 
     @Test
@@ -33,12 +33,12 @@ internal class RecurringJobTest {
         job.startAsync(retryOnFail = true)
         testCoroutineScope.testScheduler.apply { advanceTimeBy(1); runCurrent() }
 
-        assertThat(job.getCallCounter()).isEqualTo(1)
+        assertThat(job.getCallCounter()).isEqualTo(0)
         assertThat(job.getJobCompletedCounter()).isEqualTo(0)
 
         testCoroutineScope.testScheduler.apply { advanceTimeBy(delay); runCurrent() }
 
-        assertThat(job.getCallCounter()).isEqualTo(2)
+        assertThat(job.getCallCounter()).isEqualTo(1)
         assertThat(job.getJobCompletedCounter()).isEqualTo(0)
     }
     @Test
@@ -48,19 +48,19 @@ internal class RecurringJobTest {
         job.startAsync(retryOnFail = false)
         testCoroutineScope.testScheduler.apply { advanceTimeBy(1); runCurrent() }
 
-        assertThat(job.getCallCounter()).isEqualTo(1)
-        assertThat(job.getJobCompletedCounter()).isEqualTo(0)
+        assertThat(job.getCallCounter()).isEqualTo(0)
 
         testCoroutineScope.testScheduler.apply { advanceTimeBy(delay); runCurrent() }
 
         assertThat(job.getCallCounter()).isEqualTo(1)
+        assertThat(job.getJobCompletedCounter()).isEqualTo(0)
     }
 
     @Test
     internal fun `Stopping the job prevents new execution`() {
 
         job.startAsync()
-        testCoroutineScope.testScheduler.apply { advanceTimeBy(1); runCurrent() }
+        testCoroutineScope.testScheduler.apply { advanceTimeBy(delay); runCurrent() }
         job.stop()
 
         assertThat(job.getJobCompletedCounter()).isEqualTo(1)
