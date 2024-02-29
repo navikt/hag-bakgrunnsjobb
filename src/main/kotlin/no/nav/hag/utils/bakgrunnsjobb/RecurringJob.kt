@@ -15,15 +15,18 @@ abstract class RecurringJob(
     protected var isRunning = false
 
     fun startAsync(retryOnFail: Boolean = false) {
-        logger.debug("Starter opp")
+        logger.info("Starter opp")
         isRunning = true
         scheduleAsyncJobRun(retryOnFail)
     }
 
     private fun scheduleAsyncJobRun(retryOnFail: Boolean) {
         coroutineScope.launch {
+            delay(waitMillisBetweenRuns)
             try {
-                doJob()
+                if (isRunning) {
+                    doJob()
+                }
             } catch (t: Throwable) {
                 if (retryOnFail)
                     logger.error("Jobben feilet, men forsøker på nytt etter ${waitMillisBetweenRuns / 1000} s ", t)
@@ -32,14 +35,10 @@ abstract class RecurringJob(
                     throw t
                 }
             }
-
             if (isRunning) {
-                delay(waitMillisBetweenRuns)
-                if (isRunning) {
-                    scheduleAsyncJobRun(retryOnFail)
-                }
+                scheduleAsyncJobRun(retryOnFail)
             } else {
-                logger.debug("Stoppet.")
+                logger.info("Stoppet.")
             }
         }
     }
