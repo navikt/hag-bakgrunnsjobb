@@ -13,7 +13,6 @@ import javax.sql.DataSource
 interface BakgrunnsjobbRepository {
     fun getById(id: UUID): Bakgrunnsjobb?
     fun save(bakgrunnsjobb: Bakgrunnsjobb)
-    fun save(bakgrunnsjobb: Bakgrunnsjobb, connection: Connection)
     fun findAutoCleanJobs(): List<Bakgrunnsjobb>
     fun findOkAutoCleanJobs(): List<Bakgrunnsjobb>
     fun findByKjoeretidBeforeAndStatusIn(timeout: LocalDateTime, tilstander: Set<BakgrunnsjobbStatus>, alle: Boolean): List<Bakgrunnsjobb>
@@ -21,7 +20,7 @@ interface BakgrunnsjobbRepository {
     fun deleteAll()
     fun deleteOldOkJobs(months: Long)
     fun update(bakgrunnsjobb: Bakgrunnsjobb)
-    fun update(bakgrunnsjobb: Bakgrunnsjobb, connection: Connection)
+
 }
 
 class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
@@ -34,10 +33,6 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
 
     override fun save(bakgrunnsjobb: Bakgrunnsjobb) { //TODO?? mock-impl håndterer ikke duplikater likt som ekte impl
         jobs.put(bakgrunnsjobb.uuid, bakgrunnsjobb)
-    }
-
-    override fun save(bakgrunnsjobb: Bakgrunnsjobb, connection: Connection) {
-        save(bakgrunnsjobb)
     }
 
     override fun findAutoCleanJobs(): List<Bakgrunnsjobb> {
@@ -66,19 +61,15 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
         save(bakgrunnsjobb)
     }
 
-    override fun update(bakgrunnsjobb: Bakgrunnsjobb, connection: Connection) {
-        update(bakgrunnsjobb)
-    }
-
     override fun deleteOldOkJobs(months: Long) {
         val someMonthsAgo = LocalDateTime.now().minusMonths(months)
         jobs.values.filter {
             it.behandlet?.isBefore(someMonthsAgo) == true && it.status.equals(BakgrunnsjobbStatus.OK)
         }
-        .map { it.uuid }
-        .forEach {
-            jobs.remove(it)
-        }
+            .map { it.uuid }
+            .forEach {
+                jobs.remove(it)
+            }
     }
 }
 
@@ -141,7 +132,7 @@ class PostgresBakgrunnsjobbRepository(val dataSource: DataSource) : Bakgrunnsjob
         }
     }
 
-    override fun save(bakgrunnsjobb: Bakgrunnsjobb, connection: Connection) {
+    private fun save(bakgrunnsjobb: Bakgrunnsjobb, connection: Connection) {
         connection.prepareStatement(insertStatement).apply {
             setString(1, bakgrunnsjobb.uuid.toString())
             setString(2, bakgrunnsjobb.type)
@@ -163,7 +154,7 @@ class PostgresBakgrunnsjobbRepository(val dataSource: DataSource) : Bakgrunnsjob
         }
     }
 
-    override fun update(bakgrunnsjobb: Bakgrunnsjobb, connection: Connection) {
+    private fun update(bakgrunnsjobb: Bakgrunnsjobb, connection: Connection) {
         connection.prepareStatement(updateStatement).apply {
             setTimestamp(1, bakgrunnsjobb.behandlet?.let(Timestamp::valueOf))
             setString(2, bakgrunnsjobb.status.toString())

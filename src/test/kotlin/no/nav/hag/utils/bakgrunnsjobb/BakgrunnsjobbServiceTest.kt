@@ -2,6 +2,7 @@ package no.nav.hag.utils.bakgrunnsjobb
 
 
 import com.zaxxer.hikari.HikariDataSource
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import no.nav.hag.utils.bakgrunnsjobb.config.Database
 import no.nav.hag.utils.bakgrunnsjobb.config.createLocalHikariConfig
@@ -38,6 +39,7 @@ class BakgrunnsjobbServiceTest {
         service.startAsync(true)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `sjekk ytelse `() {
         for (i in 1..1000) {
@@ -56,6 +58,7 @@ class BakgrunnsjobbServiceTest {
             .hasSize(1000)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `sett jobb til ok hvis ingen feil `() {
         val data = """{"status": "ok"}"""
@@ -74,6 +77,7 @@ class BakgrunnsjobbServiceTest {
         assertThat(completeJob.forsoek).isEqualTo(1)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `sett jobb til stoppet og kjør stoppet-funksjonen hvis feiler for mye `() {
         val testJobb = Bakgrunnsjobb(
