@@ -18,18 +18,18 @@ jobs:
       - name: Verify Gradle wrapper checksum
         uses: gradle/wrapper-validation-action@v1
 
-      - name: compose up
+      - name: Install Docker Compose
+        run: sudo apt-get update && sudo apt-get install -y docker-compose
+
+      - name: Compose up
         run: cd docker/local && docker-compose up -d && sleep 10
 
       - name: Build with Gradle
         run: ./gradlew build test --console=plain
-
         env:
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cleanup Gradle Cache
-        # Remove some files from the Gradle cache, so they aren't cached by GitHub Actions.
-        # Restoring these files from a GitHub Actions cache might cause problems for future builds.
         run: |
           rm -f ~/.gradle/caches/modules-2/modules-2.lock
           rm -f ~/.gradle/caches/modules-2/gc.properties
