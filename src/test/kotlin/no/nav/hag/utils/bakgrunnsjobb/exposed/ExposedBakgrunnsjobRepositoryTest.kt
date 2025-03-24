@@ -7,6 +7,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbStatus
+import no.nav.hag.utils.bakgrunnsjobb.TransactionalExtension
 import no.nav.hag.utils.bakgrunnsjobb.config.createLocalHikariConfig
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -18,9 +19,10 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
 import java.util.UUID
-
+@ExtendWith(TransactionalExtension::class)
 class ExposedBakgrunnsjobRepositoryTest {
 
     private lateinit var repository: ExposedBakgrunnsjobRepository
@@ -33,9 +35,7 @@ class ExposedBakgrunnsjobRepositoryTest {
     @BeforeEach
     fun setup() {
         repository = ExposedBakgrunnsjobRepository(database)
-        transaction(database) {
-            SchemaUtils.create(ExposedBakgrunnsjobb)
-        }
+        no.nav.hag.utils.bakgrunnsjobb.config.Database(createLocalHikariConfig()).migrate()
     }
 
 
