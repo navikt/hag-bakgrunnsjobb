@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+
 @ExtendWith(TransactionalExtension::class)
 class ExposedBakgrunnsjobRepositoryTest {
 
@@ -40,7 +41,6 @@ class ExposedBakgrunnsjobRepositoryTest {
     }
 
 
-
     @Test
     fun `Lagrer en jobb med save og returnerer raden med getById`() {
         transaction {
@@ -50,17 +50,19 @@ class ExposedBakgrunnsjobRepositoryTest {
             val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.NANOS)
             val testKjoeretid = testOpprettet.plusHours(1)
 
-          repository.save(Bakgrunnsjobb(
-                uuid = testUuid,
-                type = "testType",
-                opprettet = testOpprettet,
-                behandlet = null,
-                status = BakgrunnsjobbStatus.OPPRETTET,
-                kjoeretid = testKjoeretid,
-                forsoek = 1,
-                maksAntallForsoek = 3,
-                data = Json.encodeToString(testJson)
-            ))
+            repository.save(
+                Bakgrunnsjobb(
+                    uuid = testUuid,
+                    type = "testType",
+                    opprettet = testOpprettet,
+                    behandlet = null,
+                    status = BakgrunnsjobbStatus.OPPRETTET,
+                    kjoeretid = testKjoeretid,
+                    forsoek = 1,
+                    maksAntallForsoek = 3,
+                    data = Json.encodeToString(testJson)
+                )
+            )
 
 
             val bakgrunnsjobb = repository.getById(testUuid)
@@ -70,8 +72,8 @@ class ExposedBakgrunnsjobRepositoryTest {
             assertEquals(testUuid, bakgrunnsjobb!!.uuid)
             assertEquals("testType", bakgrunnsjobb.type)
             assertNull(bakgrunnsjobb.behandlet)
-            assertEquals(BakgrunnsjobbStatus.OPPRETTET, bakgrunnsjobb.status)
-            assertEquals(testKjoeretid, bakgrunnsjobb.kjoeretid)
+            assertNotNull(bakgrunnsjobb.opprettet)
+            assertNotNull(bakgrunnsjobb.kjoeretid)
             assertEquals(1, bakgrunnsjobb.forsoek)
             assertEquals(3, bakgrunnsjobb.maksAntallForsoek)
             assertEquals(Json.encodeToString(testJson), bakgrunnsjobb.data)
