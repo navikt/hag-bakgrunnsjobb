@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 @ExtendWith(TransactionalExtension::class)
 class ExposedBakgrunnsjobRepositoryTest {
@@ -43,10 +44,10 @@ class ExposedBakgrunnsjobRepositoryTest {
     @Test
     fun `Lagrer en jobb med save og returnerer raden med getById`() {
         transaction {
-            // Given: Insert a test job
+
             val testUuid = UUID.randomUUID()
             val testJson = buildJsonObject { put("key", "value") }
-            val testOpprettet = LocalDateTime.now()
+            val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.NANOS)
             val testKjoeretid = testOpprettet.plusHours(1)
 
           repository.save(Bakgrunnsjobb(
@@ -68,7 +69,7 @@ class ExposedBakgrunnsjobRepositoryTest {
             assertNotNull(bakgrunnsjobb)
             assertEquals(testUuid, bakgrunnsjobb!!.uuid)
             assertEquals("testType", bakgrunnsjobb.type)
-            assertNull(bakgrunnsjobb.behandlet) // Should remain null
+            assertNull(bakgrunnsjobb.behandlet)
             assertEquals(BakgrunnsjobbStatus.OPPRETTET, bakgrunnsjobb.status)
             assertEquals(testKjoeretid, bakgrunnsjobb.kjoeretid)
             assertEquals(1, bakgrunnsjobb.forsoek)
