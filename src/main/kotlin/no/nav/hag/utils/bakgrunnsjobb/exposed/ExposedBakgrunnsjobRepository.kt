@@ -104,6 +104,6 @@ private fun ResultRow.toBakgrunnsjobb(): Bakgrunnsjobb {
         kjoeretid = this[kjoeretid],
         forsoek = this[forsoek],
         maksAntallForsoek = this[maksForsoek],
-        data = this[data] as String
+        data = this[data]
     )
 }

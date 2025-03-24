@@ -16,10 +16,6 @@ object ExposedBakgrunnsjobb : Table("bakgrunnsjobb") {
     val kjoeretid = datetime("kjoeretid")
     val forsoek = integer("forsoek").default(0)
     val maksForsoek = integer("maks_forsoek")
-    val data = jsonb(
-        name = "data",
-        serialize = { Json.encodeToString(it) },
-        deserialize = { Json.decodeFromString(it) }
-    )
+    val data = text("data")
     override val primaryKey = PrimaryKey(jobbId)
 }
