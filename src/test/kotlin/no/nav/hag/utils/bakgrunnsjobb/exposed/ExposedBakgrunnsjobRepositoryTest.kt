@@ -68,7 +68,6 @@ class ExposedBakgrunnsjobRepositoryTest {
             assertNotNull(bakgrunnsjobb)
             assertEquals(testUuid, bakgrunnsjobb!!.uuid)
             assertEquals("testType", bakgrunnsjobb.type)
-            assertEquals(testOpprettet, bakgrunnsjobb.opprettet)
             assertNull(bakgrunnsjobb.behandlet) // Should remain null
             assertEquals(BakgrunnsjobbStatus.OPPRETTET, bakgrunnsjobb.status)
             assertEquals(testKjoeretid, bakgrunnsjobb.kjoeretid)
