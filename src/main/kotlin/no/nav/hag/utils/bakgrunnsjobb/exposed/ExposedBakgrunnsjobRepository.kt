@@ -24,6 +24,7 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.management.Query.eq
@@ -89,7 +90,15 @@ class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRep
     }
 
     override fun update(bakgrunnsjobb: Bakgrunnsjobb) {
-       save(bakgrunnsjobb)
+       transaction(db) {
+            ExposedBakgrunnsjobb.update({ jobbId eq bakgrunnsjobb.uuid }) {
+                it[behandlet] = bakgrunnsjobb.behandlet
+                it[status] = bakgrunnsjobb.status
+                it[kjoeretid] = bakgrunnsjobb.kjoeretid
+                it[forsoek] = bakgrunnsjobb.forsoek
+                it[data] = bakgrunnsjobb.data
+            }
+       }
     }
 
 }
