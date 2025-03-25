@@ -10,5 +10,5 @@ create table bakgrunnsjobb
 
     forsoek      int         not null default 0,
     maks_forsoek int         not null,
-    data         text        not null
+    data         jsonb        not null
 );

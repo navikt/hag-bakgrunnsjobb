@@ -1,6 +1,8 @@
 package no.nav.hag.utils.bakgrunnsjobb.exposed
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbRepository
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbStatus
@@ -16,8 +18,6 @@ import no.nav.hag.utils.bakgrunnsjobb.exposed.ExposedBakgrunnsjobb.type
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
@@ -27,7 +27,6 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 import java.time.LocalDateTime
 import java.util.UUID
-import javax.management.Query.eq
 
 class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRepository {
     override fun getById(id: UUID): Bakgrunnsjobb? {
@@ -50,7 +49,7 @@ class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRep
                 it[kjoeretid] = bakgrunnsjobb.kjoeretid
                 it[forsoek] = bakgrunnsjobb.forsoek
                 it[maksForsoek] = bakgrunnsjobb.maksAntallForsoek
-                it[data] = bakgrunnsjobb.data
+                it[data] = Json.encodeToJsonElement(bakgrunnsjobb.data)
             }
         }
        }
@@ -96,7 +95,7 @@ class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRep
                 it[status] = bakgrunnsjobb.status
                 it[kjoeretid] = bakgrunnsjobb.kjoeretid
                 it[forsoek] = bakgrunnsjobb.forsoek
-                it[data] = bakgrunnsjobb.data
+                it[data] = Json.encodeToJsonElement(bakgrunnsjobb.data)
             }
        }
     }
@@ -113,6 +112,6 @@ private fun ResultRow.toBakgrunnsjobb(): Bakgrunnsjobb {
         kjoeretid = this[kjoeretid],
         forsoek = this[forsoek],
         maksAntallForsoek = this[maksForsoek],
-        data = this[data]
+        data = Json.encodeToString(JsonElement.serializer(), this[data])
     )
 }

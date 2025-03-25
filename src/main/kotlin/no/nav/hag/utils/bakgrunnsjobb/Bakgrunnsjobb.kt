@@ -1,5 +1,6 @@
 package no.nav.hag.utils.bakgrunnsjobb
 
+import kotlinx.serialization.json.JsonElement
 import java.time.LocalDateTime
 import java.util.UUID
 
