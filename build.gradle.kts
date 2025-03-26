@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "no.nav.helsearbeidsgiver"
-version = "1.0.7.3-SNAPSHOT"
+version = "1.0.7.4-SNAPSHOT"
 
 repositories {
     mavenCentral()
