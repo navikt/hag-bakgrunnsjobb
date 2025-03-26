@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbStatus
@@ -61,7 +62,7 @@ fun `Lagrer en jobb med save og returnerer raden med getById`() {
                 kjoeretid = testKjoeretid,
                 forsoek = 1,
                 maksAntallForsoek = 3,
-                data = Json.encodeToString(testJson)
+                dataJson = testJson
             )
         )
 
@@ -76,7 +77,7 @@ fun `Lagrer en jobb med save og returnerer raden med getById`() {
         assertNotNull(bakgrunnsjobb.kjoeretid)
         assertEquals(1, bakgrunnsjobb.forsoek)
         assertEquals(3, bakgrunnsjobb.maksAntallForsoek)
-        //assertEquals(testJson, bakgrunnsjobb.data)
+        assertEquals(testJson, bakgrunnsjobb.dataJson)
     }
 }
 

@@ -2,7 +2,9 @@ package no.nav.hag.utils.bakgrunnsjobb.exposed
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.put
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbRepository
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbStatus
@@ -49,7 +51,7 @@ class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRep
                 it[kjoeretid] = bakgrunnsjobb.kjoeretid
                 it[forsoek] = bakgrunnsjobb.forsoek
                 it[maksForsoek] = bakgrunnsjobb.maksAntallForsoek
-                it[data] = Json.encodeToJsonElement(bakgrunnsjobb.data)
+                it[data] = bakgrunnsjobb.dataJson
             }
         }
        }
@@ -112,6 +114,7 @@ private fun ResultRow.toBakgrunnsjobb(): Bakgrunnsjobb {
         kjoeretid = this[kjoeretid],
         forsoek = this[forsoek],
         maksAntallForsoek = this[maksForsoek],
-        data = Json.encodeToString(JsonElement.serializer(), this[data])
+        dataJson = this[data],
+        data = ""
     )
 }
