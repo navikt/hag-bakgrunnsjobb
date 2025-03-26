@@ -97,7 +97,7 @@ class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRep
                 it[status] = bakgrunnsjobb.status
                 it[kjoeretid] = bakgrunnsjobb.kjoeretid
                 it[forsoek] = bakgrunnsjobb.forsoek
-                it[data] = Json.encodeToJsonElement(bakgrunnsjobb.data)
+                it[data] = bakgrunnsjobb.dataJson
             }
        }
     }
