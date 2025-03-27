@@ -49,7 +49,7 @@ class ExposedBakgrunnsjobRepositoryTest {
 
             val testUuid = UUID.randomUUID()
             val testJson = buildJsonObject { put("key", "value") }
-            val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.NANOS)
+            val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
             val testKjoeretid = testOpprettet.plusHours(1)
 
             repository.save(
@@ -100,7 +100,7 @@ class ExposedBakgrunnsjobRepositoryTest {
 
             val testUuid = UUID.randomUUID()
             val testJson = buildJsonObject { put("key", "value") }
-            val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.NANOS)
+            val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
             val testKjoeretid = testOpprettet.plusHours(1)
 
             repository.save(
