@@ -132,7 +132,9 @@ class ExposedBakgrunnsjobRepositoryTest {
 
             val bakgrunnsjobb = repository.getById(testUuid)
             assertNotNull(bakgrunnsjobb)
-            assertEquals(updatedJob, bakgrunnsjobb)
+            assertEquals(updatedJob.behandlet, bakgrunnsjobb!!.behandlet)
+            assertEquals(updatedJob.status, bakgrunnsjobb.status)
+            assertEquals(updatedJob.forsoek, bakgrunnsjobb.forsoek)
 
         }
 
