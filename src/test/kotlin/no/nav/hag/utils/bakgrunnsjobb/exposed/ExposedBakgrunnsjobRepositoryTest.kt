@@ -121,7 +121,7 @@ class ExposedBakgrunnsjobRepositoryTest {
                 uuid = testUuid,
                 type = "testType",
                 opprettet = testOpprettet,
-                behandlet = LocalDateTime.now(),
+                behandlet = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES),
                 status = BakgrunnsjobbStatus.OK,
                 kjoeretid = testKjoeretid,
                 forsoek = 1,
