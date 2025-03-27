@@ -10,6 +10,7 @@ import io.prometheus.client.Counter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonElement
 import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
 import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor.Companion.JOB_TYPE
 import java.time.LocalDateTime
@@ -77,6 +78,25 @@ class BakgrunnsjobbService(
                 forsoek = forsoek,
                 maksAntallForsoek = maksAntallForsoek,
                 data = data
+            )
+        )
+    }
+    inline fun <reified T : BakgrunnsjobbProsesserer> opprettJobbJson(
+        kjoeretid: LocalDateTime = LocalDateTime.now(),
+        forsoek: Int = 0,
+        maksAntallForsoek: Int = 3,
+        data: JsonElement
+    ) {
+        val prosesserer = prossesserere.values.filterIsInstance<T>().firstOrNull()
+            ?: throw IllegalArgumentException("Denne prosessereren er ukjent")
+
+        bakgrunnsjobbRepository.save(
+            Bakgrunnsjobb(
+                type = prosesserer.type,
+                kjoeretid = kjoeretid,
+                forsoek = forsoek,
+                maksAntallForsoek = maksAntallForsoek,
+                dataJson = data
             )
         )
     }

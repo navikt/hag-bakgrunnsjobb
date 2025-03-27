@@ -1,13 +1,13 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.9.21"
-    kotlin("plugin.serialization") version "1.9.21"
+    kotlin("jvm") version "2.0.0"
+    kotlin("plugin.serialization") version "2.0.0"
     id("maven-publish")
 }
 
 group = "no.nav.helsearbeidsgiver"
-version = "1.0.6"
+version = "1.0.7"
 
 repositories {
     mavenCentral()
@@ -21,7 +21,7 @@ publishing {
         }
     }
     repositories {
-        mavenNav("${rootProject.name}")
+        mavenNav(rootProject.name)
     }
 }
 
@@ -36,6 +36,7 @@ dependencies {
     val ktorVersion: String by project
     val logbackVersion: String by project
     val postgresqlVersion: String by project
+    val exposedVersion: String by project
     val prometheusVersion: String by project
 
     val slf4jVersion: String by project
@@ -51,6 +52,10 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonModuleKotlinVersion")
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
 
     testImplementation("ch.qos.logback:logback-classic:$logbackVersion")
@@ -62,6 +67,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
     testImplementation("org.postgresql:postgresql:$postgresqlVersion")
     testImplementation(kotlin("test"))
+}
+
+tasks.register("printVersion") {
+    println(project.version)
 }
 
 tasks.test {
