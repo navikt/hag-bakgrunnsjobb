@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.json.jsonb
 
 object ExposedBakgrunnsjobb : Table("bakgrunnsjobb") {
     val jobbId = uuid("jobb_id").uniqueIndex().autoGenerate()
-    val type = varchar("\"type\"", 100)
+    val type = varchar("type", 100)
     val behandlet = datetime("behandlet").nullable()
     val opprettet = datetime("opprettet")
     val status = enumerationByName("status", 50, BakgrunnsjobbStatus::class)

@@ -43,43 +43,42 @@ class ExposedBakgrunnsjobRepositoryTest {
     }
 
 
-@Test
-fun `Lagrer en jobb med save og returnerer raden med getById`() {
-    transaction {
+    @Test
+    fun `Lagrer en jobb med save og returnerer raden med getById`() {
+        transaction {
 
-        val testUuid = UUID.randomUUID()
-        val testJson = buildJsonObject { put("key", "value") }
-        val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.NANOS)
-        val testKjoeretid = testOpprettet.plusHours(1)
+            val testUuid = UUID.randomUUID()
+            val testJson = buildJsonObject { put("key", "value") }
+            val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.NANOS)
+            val testKjoeretid = testOpprettet.plusHours(1)
 
-        repository.save(
-            Bakgrunnsjobb(
-                uuid = testUuid,
-                type = "testType",
-                opprettet = testOpprettet,
-                behandlet = null,
-                status = BakgrunnsjobbStatus.OPPRETTET,
-                kjoeretid = testKjoeretid,
-                forsoek = 1,
-                maksAntallForsoek = 3,
-                dataJson = testJson
+            repository.save(
+                Bakgrunnsjobb(
+                    uuid = testUuid,
+                    type = "testType",
+                    opprettet = testOpprettet,
+                    behandlet = null,
+                    status = BakgrunnsjobbStatus.OPPRETTET,
+                    kjoeretid = testKjoeretid,
+                    forsoek = 1,
+                    maksAntallForsoek = 3,
+                    dataJson = testJson
+                )
             )
-        )
 
-        val bakgrunnsjobb = repository.getById(testUuid)
-        println("Lagret JSON: ${bakgrunnsjobb?.data}")
+            val bakgrunnsjobb = repository.getById(testUuid)
 
-        assertNotNull(bakgrunnsjobb)
-        assertEquals(testUuid, bakgrunnsjobb!!.uuid)
-        assertEquals("testType", bakgrunnsjobb.type)
-        assertNull(bakgrunnsjobb.behandlet)
-        assertNotNull(bakgrunnsjobb.opprettet)
-        assertNotNull(bakgrunnsjobb.kjoeretid)
-        assertEquals(1, bakgrunnsjobb.forsoek)
-        assertEquals(3, bakgrunnsjobb.maksAntallForsoek)
-        assertEquals(testJson, bakgrunnsjobb.dataJson)
+            assertNotNull(bakgrunnsjobb)
+            assertEquals(testUuid, bakgrunnsjobb!!.uuid)
+            assertEquals("testType", bakgrunnsjobb.type)
+            assertNull(bakgrunnsjobb.behandlet)
+            assertNotNull(bakgrunnsjobb.opprettet)
+            assertNotNull(bakgrunnsjobb.kjoeretid)
+            assertEquals(1, bakgrunnsjobb.forsoek)
+            assertEquals(3, bakgrunnsjobb.maksAntallForsoek)
+            assertEquals(testJson, bakgrunnsjobb.dataJson)
+        }
     }
-}
 
     @Test
     fun `getById returer null hvis jobben ikke finnes`() {
@@ -93,5 +92,49 @@ fun `Lagrer en jobb med save og returnerer raden med getById`() {
             // Then: It should return null
             assertNull(bakgrunnsjobb)
         }
+    }
+
+    @Test
+    fun `update oppdaterer raden`() {
+        transaction {
+
+            val testUuid = UUID.randomUUID()
+            val testJson = buildJsonObject { put("key", "value") }
+            val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.NANOS)
+            val testKjoeretid = testOpprettet.plusHours(1)
+
+            repository.save(
+                Bakgrunnsjobb(
+                    uuid = testUuid,
+                    type = "testType",
+                    opprettet = testOpprettet,
+                    behandlet = null,
+                    status = BakgrunnsjobbStatus.OPPRETTET,
+                    kjoeretid = testKjoeretid,
+                    forsoek = 0,
+                    maksAntallForsoek = 3,
+                    dataJson = testJson
+                )
+            )
+
+            val updatedJob = Bakgrunnsjobb(
+                uuid = testUuid,
+                type = "testType",
+                opprettet = testOpprettet,
+                behandlet = LocalDateTime.now(),
+                status = BakgrunnsjobbStatus.OK,
+                kjoeretid = testKjoeretid,
+                forsoek = 1,
+                maksAntallForsoek = 3,
+                dataJson = testJson
+            )
+            repository.update(updatedJob)
+
+            val bakgrunnsjobb = repository.getById(testUuid)
+            assertNotNull(bakgrunnsjobb)
+            assertEquals(updatedJob, bakgrunnsjobb)
+
+        }
+
     }
 }
