@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.json.jsonb
 
-
 object ExposedBakgrunnsjobb : Table("bakgrunnsjobb") {
     val jobbId = uuid("jobb_id").uniqueIndex().autoGenerate()
     val type = varchar("type", 100)

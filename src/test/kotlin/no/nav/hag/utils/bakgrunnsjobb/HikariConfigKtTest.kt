@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class HikariConfigKtTest {
-
     @Test
     fun testCreateHikariConfig() {
         val hikariConfig = createHikariConfig("jdbc:postgresql://localhost:5432/bgjobb_db", "harbeidsgiverbackend", "harbeidsgiverbacken")
@@ -21,6 +20,7 @@ class HikariConfigKtTest {
         Assertions.assertEquals("bgjobb", localHikariConfig.username)
         Assertions.assertEquals("bgjobb", localHikariConfig.password)
     }
+
     @Test
     fun createTestHikariConfigWithIncorrectUserKOTest() {
         val localHiariConfig = createLocalHikariConfig()

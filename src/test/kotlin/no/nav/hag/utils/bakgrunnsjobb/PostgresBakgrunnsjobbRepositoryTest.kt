@@ -8,10 +8,9 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 class PostgresBakgrunnsjobbRepositoryTest {
-
     lateinit var repo: PostgresBakgrunnsjobbRepository
     lateinit var dataSource: HikariDataSource
     val now = LocalDateTime.now()
@@ -30,17 +29,18 @@ class PostgresBakgrunnsjobbRepositoryTest {
     @Test
     fun `Lagre Les Oppdater Slett`() {
         val uuid = UUID.randomUUID()
-        val bakgrunnsjobb = Bakgrunnsjobb(
-            uuid,
-            "test",
-            now,
-            now,
-            BakgrunnsjobbStatus.OPPRETTET,
-            now,
-            0,
-            3,
-            "{}"
-        )
+        val bakgrunnsjobb =
+            Bakgrunnsjobb(
+                uuid,
+                "test",
+                now,
+                now,
+                BakgrunnsjobbStatus.OPPRETTET,
+                now,
+                0,
+                3,
+                "{}",
+            )
 
         repo.save(bakgrunnsjobb)
 
@@ -74,17 +74,18 @@ class PostgresBakgrunnsjobbRepositoryTest {
     @Test
     fun `find autoclean jobs`() {
         val uuid = UUID.randomUUID()
-        val bakgrunnsjobb = Bakgrunnsjobb(
-            uuid,
-            AutoCleanJobbProcessor.JOB_TYPE,
-            now,
-            now,
-            BakgrunnsjobbStatus.OPPRETTET,
-            now,
-            0,
-            3,
-            "{}"
-        )
+        val bakgrunnsjobb =
+            Bakgrunnsjobb(
+                uuid,
+                AutoCleanJobbProcessor.JOB_TYPE,
+                now,
+                now,
+                BakgrunnsjobbStatus.OPPRETTET,
+                now,
+                0,
+                3,
+                "{}",
+            )
         assertThat(repo.findAutoCleanJobs()).hasSize(0)
         repo.save(bakgrunnsjobb)
         assertThat(repo.findAutoCleanJobs()).hasSize(1)
@@ -99,17 +100,18 @@ class PostgresBakgrunnsjobbRepositoryTest {
     @Test
     fun `håndter null`() {
         val uuid = UUID.randomUUID()
-        val bakgrunnsjobb = Bakgrunnsjobb(
-            uuid,
-            "test",
-            null,
-            now,
-            BakgrunnsjobbStatus.OPPRETTET,
-            now,
-            0,
-            3,
-            "{}"
-        )
+        val bakgrunnsjobb =
+            Bakgrunnsjobb(
+                uuid,
+                "test",
+                null,
+                now,
+                BakgrunnsjobbStatus.OPPRETTET,
+                now,
+                0,
+                3,
+                "{}",
+            )
 
         repo.save(bakgrunnsjobb)
 
@@ -121,17 +123,18 @@ class PostgresBakgrunnsjobbRepositoryTest {
     @Test
     fun `job gets deleted if older than input`() {
         val uuid = UUID.randomUUID()
-        val bakgrunnsjobb = Bakgrunnsjobb(
-            uuid,
-            "bakgrunnsjobb-autoclean",
-            now.minusMonths(3),
-            now,
-            BakgrunnsjobbStatus.OK,
-            now.minusMonths(3),
-            0,
-            3,
-            "{}"
-        )
+        val bakgrunnsjobb =
+            Bakgrunnsjobb(
+                uuid,
+                "bakgrunnsjobb-autoclean",
+                now.minusMonths(3),
+                now,
+                BakgrunnsjobbStatus.OK,
+                now.minusMonths(3),
+                0,
+                3,
+                "{}",
+            )
         repo.save(bakgrunnsjobb)
         assertThat(repo.findOkAutoCleanJobs()).hasSize(1)
         repo.deleteOldOkJobs(2)
@@ -141,17 +144,18 @@ class PostgresBakgrunnsjobbRepositoryTest {
     @Test
     fun `job do not get deleted if not older than input`() {
         val uuid = UUID.randomUUID()
-        val bakgrunnsjobb = Bakgrunnsjobb(
-            uuid,
-            "bakgrunnsjobb-autoclean",
-            now.minusMonths(2),
-            now,
-            BakgrunnsjobbStatus.OK,
-            now.minusMonths(2),
-            0,
-            3,
-            "{}"
-        )
+        val bakgrunnsjobb =
+            Bakgrunnsjobb(
+                uuid,
+                "bakgrunnsjobb-autoclean",
+                now.minusMonths(2),
+                now,
+                BakgrunnsjobbStatus.OK,
+                now.minusMonths(2),
+                0,
+                3,
+                "{}",
+            )
         repo.save(bakgrunnsjobb)
         assertThat(repo.findOkAutoCleanJobs()).hasSize(1)
         repo.deleteOldOkJobs(2)

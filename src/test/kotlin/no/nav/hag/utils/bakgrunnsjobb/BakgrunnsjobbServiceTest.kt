@@ -1,6 +1,5 @@
 package no.nav.hag.utils.bakgrunnsjobb
 
-
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
@@ -17,7 +16,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class BakgrunnsjobbServiceTest {
-
     private val dataSource = HikariDataSource(createLocalHikariConfig())
     private val repository = PostgresBakgrunnsjobbRepository(dataSource)
     private val testCoroutineScope = TestScope()
@@ -29,10 +27,11 @@ class BakgrunnsjobbServiceTest {
     companion object {
         @JvmStatic
         @BeforeAll
-        fun migrateDb(): Unit {
+        fun migrateDb() {
             Database(createLocalHikariConfig()).migrate()
         }
     }
+
     @BeforeEach
     internal fun setup() {
         service.registrer(eksempelProsesserer)
@@ -45,13 +44,17 @@ class BakgrunnsjobbServiceTest {
         for (i in 1..1000) {
             val uuid = UUID.randomUUID()
             val data = """{"status": "ok", "uuid": "$uuid" }"""
-            val testJobb = Bakgrunnsjobb(
-                type = EksempelProsesserer.JOBB_TYPE,
-                data = data
-            )
+            val testJobb =
+                Bakgrunnsjobb(
+                    type = EksempelProsesserer.JOBB_TYPE,
+                    data = data,
+                )
             repository.save(testJobb)
         }
-        testCoroutineScope.testScheduler.apply { advanceTimeBy(1); runCurrent() }
+        testCoroutineScope.testScheduler.apply {
+            advanceTimeBy(1)
+            runCurrent()
+        }
 
         val resultSet = repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now(), setOf(BakgrunnsjobbStatus.OK), true)
         assertThat(resultSet)
@@ -62,12 +65,16 @@ class BakgrunnsjobbServiceTest {
     @Test
     fun `sett jobb til ok hvis ingen feil `() {
         val data = """{"status": "ok"}"""
-        val testJobb = Bakgrunnsjobb(
-            type = EksempelProsesserer.JOBB_TYPE,
-            data = data
-        )
+        val testJobb =
+            Bakgrunnsjobb(
+                type = EksempelProsesserer.JOBB_TYPE,
+                data = data,
+            )
         repository.save(testJobb)
-        testCoroutineScope.testScheduler.apply { advanceTimeBy(1); runCurrent() }
+        testCoroutineScope.testScheduler.apply {
+            advanceTimeBy(1)
+            runCurrent()
+        }
 
         val resultSet = repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now(), setOf(BakgrunnsjobbStatus.OK), false)
         assertThat(resultSet)
@@ -80,14 +87,18 @@ class BakgrunnsjobbServiceTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `sett jobb til stoppet og kjør stoppet-funksjonen hvis feiler for mye `() {
-        val testJobb = Bakgrunnsjobb(
-            type = EksempelProsesserer.JOBB_TYPE,
-            opprettet = now.minusHours(1),
-            maksAntallForsoek = 3,
-            data = """{"status": "fail"}"""
-        )
+        val testJobb =
+            Bakgrunnsjobb(
+                type = EksempelProsesserer.JOBB_TYPE,
+                opprettet = now.minusHours(1),
+                maksAntallForsoek = 3,
+                data = """{"status": "fail"}""",
+            )
         repository.save(testJobb)
-        testCoroutineScope.testScheduler.apply { advanceTimeBy(1); runCurrent() }
+        testCoroutineScope.testScheduler.apply {
+            advanceTimeBy(1)
+            runCurrent()
+        }
 
         // Den går rett til stoppet i denne testen
         assertThat(repository.findByKjoeretidBeforeAndStatusIn(now.plusMinutes(1), setOf(BakgrunnsjobbStatus.STOPPET), false))
@@ -98,13 +109,15 @@ class BakgrunnsjobbServiceTest {
 
     @Test
     fun `autoClean opprettes feil parametre`() {
-        var exception = Assertions.assertThrows(IllegalArgumentException::class.java) {
-            service.startAutoClean(-1, 3)
-        }
+        var exception =
+            Assertions.assertThrows(IllegalArgumentException::class.java) {
+                service.startAutoClean(-1, 3)
+            }
         Assertions.assertEquals("start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0", exception.message)
-        exception = Assertions.assertThrows(IllegalArgumentException::class.java) {
-            service.startAutoClean(1, -1)
-        }
+        exception =
+            Assertions.assertThrows(IllegalArgumentException::class.java) {
+                service.startAutoClean(1, -1)
+            }
         Assertions.assertEquals("start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0", exception.message)
         assertThat(repository.findAutoCleanJobs()).hasSize(0)
     }
@@ -115,7 +128,7 @@ class BakgrunnsjobbServiceTest {
         assertThat(repository.findAutoCleanJobs()).hasSize(1)
         assert(
             repository.findAutoCleanJobs().get(0).kjoeretid > now.plusHours(1) &&
-                    repository.findAutoCleanJobs().get(0).kjoeretid < now.plusHours(3)
+                repository.findAutoCleanJobs().get(0).kjoeretid < now.plusHours(3),
         )
     }
 
@@ -138,11 +151,10 @@ class BakgrunnsjobbServiceTest {
         assertThat(jobber[0].data).isEqualTo(data)
     }
 
-        @AfterEach
-        fun teardown() {
-            repository.deleteAll()
-        }
-
+    @AfterEach
+    fun teardown() {
+        repository.deleteAll()
+    }
 }
 
 class EksempelProsesserer : BakgrunnsjobbProsesserer {
@@ -165,7 +177,8 @@ class EksempelProsesserer : BakgrunnsjobbProsesserer {
         throw RuntimeException()
     }
 
-    override fun nesteForsoek(forsoek: Int, forrigeForsoek: LocalDateTime): LocalDateTime {
-        return LocalDateTime.now()
-    }
+    override fun nesteForsoek(
+        forsoek: Int,
+        forrigeForsoek: LocalDateTime,
+    ): LocalDateTime = LocalDateTime.now()
 }
