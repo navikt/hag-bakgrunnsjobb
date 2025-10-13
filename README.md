@@ -21,25 +21,7 @@ For å ta i bruk: Importer biblioteket (gradle):
 implementation("no.nav.helsearbeidsgiver:hag-bakgrunnsjobb:$bakgrunnsjobbVersion")
 ````
 
-Legg til denne i flyway db.migration scripts for å opprette nødvendig tabell:
-
-```SQL
-create table bakgrunnsjobb
-(
-jobb_id      uuid unique  not null primary key,
-type         VARCHAR(100) not null,
-behandlet    timestamp,
-opprettet    timestamp    not null,
-
-    status       VARCHAR(50)  not null,
-    kjoeretid    timestamp    not null,
-
-    forsoek      int          not null default 0,
-    maks_forsoek int          not null,
-    data         jsonb
-);
-CREATE INDEX idx_bgjobb_kjoeretid_status ON BAKGRUNNSJOBB(KJOERETID, STATUS);
-```
+Kopier flyway sql-scripts fra `src.test.resources.db.migrations` for å opprette databasetabeller
 
 Lag en eller flere jobber som du ønsker å kjøre - disse må implementere BakgrunnsjobbProsesserer
 
