@@ -13,8 +13,8 @@ data class Bakgrunnsjobb(
     var kjoeretid: LocalDateTime = LocalDateTime.now(),
     var forsoek: Int = 0,
     var maksAntallForsoek: Int = 3,
-    var data: String="",//Dette feltet brukes ikke i exposed. Det er kun for jdbc
-    var dataJson: JsonElement?=null
+    var data: String = "", // Dette feltet brukes ikke i exposed. Det er kun for jdbc
+    var dataJson: JsonElement? = null,
 )
 
 enum class BakgrunnsjobbStatus {
@@ -41,5 +41,5 @@ enum class BakgrunnsjobbStatus {
     /**
      * Oppgaven er manuelt avbrutt
      */
-    AVBRUTT
+    AVBRUTT,
 }

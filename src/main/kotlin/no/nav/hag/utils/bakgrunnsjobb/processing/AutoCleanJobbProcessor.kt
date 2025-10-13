@@ -15,6 +15,7 @@ class AutoCleanJobbProcessor(
     companion object {
         val JOB_TYPE = "bakgrunnsjobb-autoclean"
     }
+
     override val type: String get() = JOB_TYPE
 
     override fun prosesser(jobb: Bakgrunnsjobb) {

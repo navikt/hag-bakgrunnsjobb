@@ -1,6 +1,5 @@
 package no.nav.hag.utils.bakgrunnsjobb.exposed
 
-
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -28,25 +27,23 @@ import java.util.UUID
 
 @ExtendWith(TransactionalExtension::class)
 class ExposedBakgrunnsjobRepositoryTest {
-
     private lateinit var repository: ExposedBakgrunnsjobRepository
 
     val dataSource = HikariDataSource(createLocalHikariConfig())
 
     val database = Database.connect(dataSource)
 
-
     @BeforeEach
     fun setup() {
         repository = ExposedBakgrunnsjobRepository(database)
-        no.nav.hag.utils.bakgrunnsjobb.config.Database(createLocalHikariConfig()).migrate()
+        no.nav.hag.utils.bakgrunnsjobb.config
+            .Database(createLocalHikariConfig())
+            .migrate()
     }
-
 
     @Test
     fun `Lagrer en jobb med save og returnerer raden med getById`() {
         transaction {
-
             val testUuid = UUID.randomUUID()
             val testJson = buildJsonObject { put("key", "value") }
             val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
@@ -62,8 +59,8 @@ class ExposedBakgrunnsjobRepositoryTest {
                     kjoeretid = testKjoeretid,
                     forsoek = 1,
                     maksAntallForsoek = 3,
-                    dataJson = testJson
-                )
+                    dataJson = testJson,
+                ),
             )
 
             val bakgrunnsjobb = repository.getById(testUuid)
@@ -97,7 +94,6 @@ class ExposedBakgrunnsjobRepositoryTest {
     @Test
     fun `update oppdaterer raden`() {
         transaction {
-
             val testUuid = UUID.randomUUID()
             val testJson = buildJsonObject { put("key", "value") }
             val testOpprettet = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
@@ -113,21 +109,22 @@ class ExposedBakgrunnsjobRepositoryTest {
                     kjoeretid = testKjoeretid,
                     forsoek = 0,
                     maksAntallForsoek = 3,
-                    dataJson = testJson
-                )
+                    dataJson = testJson,
+                ),
             )
 
-            val updatedJob = Bakgrunnsjobb(
-                uuid = testUuid,
-                type = "testType",
-                opprettet = testOpprettet,
-                behandlet = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES),
-                status = BakgrunnsjobbStatus.OK,
-                kjoeretid = testKjoeretid,
-                forsoek = 1,
-                maksAntallForsoek = 3,
-                dataJson = testJson
-            )
+            val updatedJob =
+                Bakgrunnsjobb(
+                    uuid = testUuid,
+                    type = "testType",
+                    opprettet = testOpprettet,
+                    behandlet = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES),
+                    status = BakgrunnsjobbStatus.OK,
+                    kjoeretid = testKjoeretid,
+                    forsoek = 1,
+                    maksAntallForsoek = 3,
+                    dataJson = testJson,
+                )
             repository.update(updatedJob)
 
             val bakgrunnsjobb = repository.getById(testUuid)
@@ -135,8 +132,6 @@ class ExposedBakgrunnsjobRepositoryTest {
             assertEquals(updatedJob.behandlet, bakgrunnsjobb!!.behandlet)
             assertEquals(updatedJob.status, bakgrunnsjobb.status)
             assertEquals(updatedJob.forsoek, bakgrunnsjobb.forsoek)
-
         }
-
     }
 }

@@ -5,14 +5,16 @@ import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
 
 class Database(
-    private val dbConfig: HikariConfig
+    private val dbConfig: HikariConfig,
 ) {
     val dataSource by lazy { HikariDataSource(dbConfig) }
+
     fun migrate() {
         migrationConfig(dbConfig)
             .let(::HikariDataSource)
             .also {
-                Flyway.configure()
+                Flyway
+                    .configure()
                     .dataSource(it)
                     .lockRetryCount(50)
                     .load()

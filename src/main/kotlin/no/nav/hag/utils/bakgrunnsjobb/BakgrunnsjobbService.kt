@@ -20,18 +20,21 @@ class BakgrunnsjobbService(
     val bakgrunnsjobbRepository: BakgrunnsjobbRepository,
     val delayMillis: Long = 30 * 1000L,
     val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
-    val bakgrunnsvarsler: Bakgrunnsvarsler = TomVarsler()
+    val bakgrunnsvarsler: Bakgrunnsvarsler = TomVarsler(),
 ) : RecurringJob(coroutineScope, delayMillis) {
-
     val prossesserere = HashMap<String, BakgrunnsjobbProsesserer>()
 
-    private val om = ObjectMapper().apply {
-        registerKotlinModule()
-        disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        dateFormat = StdDateFormat()
-    }
-    fun startAutoClean(frekvensITimer: Int, slettEldreEnnMaaneder: Long) {
+    private val om =
+        ObjectMapper().apply {
+            registerKotlinModule()
+            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            dateFormat = StdDateFormat()
+        }
 
+    fun startAutoClean(
+        frekvensITimer: Int,
+        slettEldreEnnMaaneder: Long,
+    ) {
         if (frekvensITimer < 1 || slettEldreEnnMaaneder < 0) {
             logger.info("startautoclean forsøkt startet med ugyldige parametre.")
             throw java.lang.IllegalArgumentException("start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0")
@@ -45,8 +48,8 @@ class BakgrunnsjobbService(
                         kjoeretid = LocalDateTime.now().plusHours(frekvensITimer.toLong()),
                         maksAntallForsoek = 10,
                         data = om.writeValueAsString(AutoCleanJobbProcessor.JobbData(slettEldreEnnMaaneder, frekvensITimer)),
-                        type = JOB_TYPE
-                    )
+                        type = JOB_TYPE,
+                    ),
                 )
             } else {
                 val ekisterendeAutoCleanJobb = autocleanjobber.get(0)
@@ -66,10 +69,11 @@ class BakgrunnsjobbService(
         kjoeretid: LocalDateTime = LocalDateTime.now(),
         forsoek: Int = 0,
         maksAntallForsoek: Int = 3,
-        data: String
+        data: String,
     ) {
-        val prosesserer = prossesserere.values.filterIsInstance<T>().firstOrNull()
-            ?: throw IllegalArgumentException("Denne prosessereren er ukjent")
+        val prosesserer =
+            prossesserere.values.filterIsInstance<T>().firstOrNull()
+                ?: throw IllegalArgumentException("Denne prosessereren er ukjent")
 
         bakgrunnsjobbRepository.save(
             Bakgrunnsjobb(
@@ -77,18 +81,20 @@ class BakgrunnsjobbService(
                 kjoeretid = kjoeretid,
                 forsoek = forsoek,
                 maksAntallForsoek = maksAntallForsoek,
-                data = data
-            )
+                data = data,
+            ),
         )
     }
+
     inline fun <reified T : BakgrunnsjobbProsesserer> opprettJobbJson(
         kjoeretid: LocalDateTime = LocalDateTime.now(),
         forsoek: Int = 0,
         maksAntallForsoek: Int = 3,
-        data: JsonElement
+        data: JsonElement,
     ) {
-        val prosesserer = prossesserere.values.filterIsInstance<T>().firstOrNull()
-            ?: throw IllegalArgumentException("Denne prosessereren er ukjent")
+        val prosesserer =
+            prossesserere.values.filterIsInstance<T>().firstOrNull()
+                ?: throw IllegalArgumentException("Denne prosessereren er ukjent")
 
         bakgrunnsjobbRepository.save(
             Bakgrunnsjobb(
@@ -96,17 +102,18 @@ class BakgrunnsjobbService(
                 kjoeretid = kjoeretid,
                 forsoek = forsoek,
                 maksAntallForsoek = maksAntallForsoek,
-                dataJson = data
-            )
+                dataJson = data,
+            ),
         )
     }
 
     override fun doJob() {
         do {
-            val wasEmpty = finnVentende()
-                .also { logger.debug("Fant ${it.size} bakgrunnsjobber å kjøre") }
-                .onEach { prosesser(it) }
-                .isEmpty()
+            val wasEmpty =
+                finnVentende()
+                    .also { logger.debug("Fant ${it.size} bakgrunnsjobber å kjøre") }
+                    .onEach { prosesser(it) }
+                    .isEmpty()
         } while (!wasEmpty)
     }
 
@@ -114,8 +121,9 @@ class BakgrunnsjobbService(
         jobb.behandlet = LocalDateTime.now()
         jobb.forsoek++
 
-        val prossessorForType = prossesserere[jobb.type]
-            ?: throw IllegalArgumentException("Det finnes ingen prossessor for typen '${jobb.type}'. Dette må konfigureres.")
+        val prossessorForType =
+            prossesserere[jobb.type]
+                ?: throw IllegalArgumentException("Det finnes ingen prossessor for typen '${jobb.type}'. Dette må konfigureres.")
 
         try {
             jobb.kjoeretid = prossessorForType.nesteForsoek(jobb.forsoek, LocalDateTime.now())
@@ -144,10 +152,13 @@ class BakgrunnsjobbService(
         bakgrunnsjobbRepository.findByKjoeretidBeforeAndStatusIn(
             LocalDateTime.now(),
             setOf(BakgrunnsjobbStatus.OPPRETTET, BakgrunnsjobbStatus.FEILET),
-            alle
+            alle,
         )
 
-    private fun tryStopAction(prossessorForType: BakgrunnsjobbProsesserer, jobb: Bakgrunnsjobb) {
+    private fun tryStopAction(
+        prossessorForType: BakgrunnsjobbProsesserer,
+        jobb: Bakgrunnsjobb,
+    ) {
         try {
             prossessorForType.stoppet(jobb)
             logger.error("Jobben ${jobb.uuid} kjørte sin opprydningsjobb!")
@@ -217,29 +228,38 @@ interface BakgrunnsjobbProsesserer {
      *  16       	31	             256	        10,7
      *
      */
-    fun nesteForsoek(forsoek: Int, forrigeForsoek: LocalDateTime): LocalDateTime {
+    fun nesteForsoek(
+        forsoek: Int,
+        forrigeForsoek: LocalDateTime,
+    ): LocalDateTime {
         val backoffWaitInHours = if (forsoek == 1) 1 else forsoek - 1 + forsoek
         return LocalDateTime.now().plusHours(backoffWaitInHours.toLong())
     }
 }
 
-val FEILET_JOBB_COUNTER = Counter.build()
-    .namespace("helsearbeidsgiver")
-    .name("feilet_jobb")
-    .labelNames("jobbtype")
-    .help("Teller jobber som har midlertidig feilet, men vil bli forsøkt igjen")
-    .register()
+val FEILET_JOBB_COUNTER =
+    Counter
+        .build()
+        .namespace("helsearbeidsgiver")
+        .name("feilet_jobb")
+        .labelNames("jobbtype")
+        .help("Teller jobber som har midlertidig feilet, men vil bli forsøkt igjen")
+        .register()
 
-val STOPPET_JOBB_COUNTER = Counter.build()
-    .namespace("helsearbeidsgiver")
-    .name("stoppet_jobb")
-    .labelNames("jobbtype")
-    .help("Teller jobber som har feilet permanent og må følges opp")
-    .register()
+val STOPPET_JOBB_COUNTER =
+    Counter
+        .build()
+        .namespace("helsearbeidsgiver")
+        .name("stoppet_jobb")
+        .labelNames("jobbtype")
+        .help("Teller jobber som har feilet permanent og må følges opp")
+        .register()
 
-val OK_JOBB_COUNTER = Counter.build()
-    .namespace("helsearbeidsgiver")
-    .name("jobb_ok")
-    .labelNames("jobbtype")
-    .help("Teller jobber som har blitt utført OK")
-    .register()
+val OK_JOBB_COUNTER =
+    Counter
+        .build()
+        .namespace("helsearbeidsgiver")
+        .name("jobb_ok")
+        .labelNames("jobbtype")
+        .help("Teller jobber som har blitt utført OK")
+        .register()

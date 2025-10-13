@@ -30,18 +30,21 @@ import org.jetbrains.exposed.sql.update
 import java.time.LocalDateTime
 import java.util.UUID
 
-class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRepository {
-    override fun getById(id: UUID): Bakgrunnsjobb? {
-        return transaction(db) {
-            ExposedBakgrunnsjobb.selectAll().where(jobbId.eq(id)).map {
-                it.toBakgrunnsjobb()
-            }.singleOrNull()
+class ExposedBakgrunnsjobRepository(
+    private val db: Database,
+) : BakgrunnsjobbRepository {
+    override fun getById(id: UUID): Bakgrunnsjobb? =
+        transaction(db) {
+            ExposedBakgrunnsjobb
+                .selectAll()
+                .where(jobbId.eq(id))
+                .map {
+                    it.toBakgrunnsjobb()
+                }.singleOrNull()
         }
-    }
-
 
     override fun save(bakgrunnsjobb: Bakgrunnsjobb) {
-       transaction(db) {
+        transaction(db) {
             ExposedBakgrunnsjobb.insert {
                 it[jobbId] = bakgrunnsjobb.uuid
                 it[type] = bakgrunnsjobb.type
@@ -54,7 +57,7 @@ class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRep
                 it[data] = bakgrunnsjobb.dataJson
             }
         }
-       }
+    }
 
     override fun findAutoCleanJobs(): List<Bakgrunnsjobb> {
         TODO("Not yet implemented")
@@ -64,20 +67,23 @@ class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRep
         TODO("Not yet implemented")
     }
 
-    override fun findByKjoeretidBeforeAndStatusIn(timeout: LocalDateTime, tilstander: Set<BakgrunnsjobbStatus>, alle: Boolean): List<Bakgrunnsjobb> {
-        return transaction(db) {
-            val query = ExposedBakgrunnsjobb.selectAll().where{(kjoeretid lessEq timeout) and (status inList tilstander)}
+    override fun findByKjoeretidBeforeAndStatusIn(
+        timeout: LocalDateTime,
+        tilstander: Set<BakgrunnsjobbStatus>,
+        alle: Boolean,
+    ): List<Bakgrunnsjobb> =
+        transaction(db) {
+            val query = ExposedBakgrunnsjobb.selectAll().where { (kjoeretid lessEq timeout) and (status inList tilstander) }
             if (!alle) {
                 query.limit(100)
             }
             query.map { it.toBakgrunnsjobb() }
         }
-    }
 
     override fun delete(uuid: UUID) {
-       transaction(db) {
+        transaction(db) {
             ExposedBakgrunnsjobb.deleteWhere { jobbId eq uuid }
-       }
+        }
     }
 
     override fun deleteAll() {
@@ -91,7 +97,7 @@ class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRep
     }
 
     override fun update(bakgrunnsjobb: Bakgrunnsjobb) {
-       transaction(db) {
+        transaction(db) {
             ExposedBakgrunnsjobb.update({ jobbId eq bakgrunnsjobb.uuid }) {
                 it[behandlet] = bakgrunnsjobb.behandlet
                 it[status] = bakgrunnsjobb.status
@@ -99,13 +105,12 @@ class ExposedBakgrunnsjobRepository(private val db: Database) : BakgrunnsjobbRep
                 it[forsoek] = bakgrunnsjobb.forsoek
                 it[data] = bakgrunnsjobb.dataJson
             }
-       }
+        }
     }
-
 }
 
-private fun ResultRow.toBakgrunnsjobb(): Bakgrunnsjobb {
-    return Bakgrunnsjobb(
+private fun ResultRow.toBakgrunnsjobb(): Bakgrunnsjobb =
+    Bakgrunnsjobb(
         uuid = this[jobbId],
         type = this[type],
         opprettet = this[opprettet],
@@ -115,6 +120,5 @@ private fun ResultRow.toBakgrunnsjobb(): Bakgrunnsjobb {
         forsoek = this[forsoek],
         maksAntallForsoek = this[maksForsoek],
         dataJson = this[data],
-        data = ""
+        data = "",
     )
-}

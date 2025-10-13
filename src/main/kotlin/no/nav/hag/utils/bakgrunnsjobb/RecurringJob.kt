@@ -7,9 +7,8 @@ import org.slf4j.LoggerFactory
 
 abstract class RecurringJob(
     private val coroutineScope: CoroutineScope,
-    private val waitMillisBetweenRuns: Long
+    private val waitMillisBetweenRuns: Long,
 ) {
-
     protected val logger = LoggerFactory.getLogger(this::class.java)
 
     protected var isRunning = false
@@ -28,9 +27,9 @@ abstract class RecurringJob(
                     doJob()
                 }
             } catch (t: Throwable) {
-                if (retryOnFail)
+                if (retryOnFail) {
                     logger.error("Jobben feilet, men forsøker på nytt etter ${waitMillisBetweenRuns / 1000} s ", t)
-                else {
+                } else {
                     isRunning = false
                     throw t
                 }
