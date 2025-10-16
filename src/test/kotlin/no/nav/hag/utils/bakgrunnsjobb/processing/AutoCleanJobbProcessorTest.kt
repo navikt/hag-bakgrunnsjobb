@@ -2,6 +2,7 @@ package no.nav.hag.utils.bakgrunnsjobb.processing
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.test.TestScope
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbRepository
@@ -61,8 +62,10 @@ class AutoCleanJobbProcessorTest {
         bakgrunnsjobbRepository = MockBakgrunnsjobbRepository()
         val testScope = TestScope()
         bakgrunnsjobbService = BakgrunnsjobbService(bakgrunnsjobbRepository, 1, testScope)
-        val objectMapper = ObjectMapper()
-        objectMapper.registerModule(KotlinModule())
+        val objectMapper =
+            ObjectMapper().apply {
+                registerKotlinModule()
+            }
         autoCleanJobbProcessor = AutoCleanJobbProcessor(bakgrunnsjobbRepository, bakgrunnsjobbService, objectMapper)
     }
 
