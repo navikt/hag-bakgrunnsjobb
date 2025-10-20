@@ -5,7 +5,8 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.plugins.ResponseException
-import io.ktor.util.InternalAPI
+import io.ktor.client.statement.readRawBytes
+import io.ktor.utils.io.InternalAPI
 import io.prometheus.client.Counter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,7 +15,6 @@ import kotlinx.serialization.json.JsonElement
 import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
 import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor.Companion.JOB_TYPE
 import java.time.LocalDateTime
-import kotlin.collections.HashMap
 
 class BakgrunnsjobbService(
     val bakgrunnsjobbRepository: BakgrunnsjobbRepository,
@@ -171,8 +171,8 @@ class BakgrunnsjobbService(
     private fun tryGetResponseBody(jobException: Throwable): String? {
         if (jobException is ResponseException) {
             return try {
-                runBlocking { jobException.response.content.readUTF8Line(1_000_000) }
-            } catch (readEx: Exception) {
+                runBlocking { jobException.response.readRawBytes().decodeToString() }
+            } catch (_: Exception) {
                 null
             }
         }

@@ -8,12 +8,12 @@ import java.lang.reflect.Method
 
 class TransactionalExtension : InvocationInterceptor {
     override fun interceptTestMethod(
-        invocation: InvocationInterceptor.Invocation<Void>?,
-        invocationContext: ReflectiveInvocationContext<Method>?,
-        extensionContext: ExtensionContext?,
+        invocation: InvocationInterceptor.Invocation<Void?>,
+        invocationContext: ReflectiveInvocationContext<Method>,
+        extensionContext: ExtensionContext,
     ) {
         transaction {
-            invocation?.proceed()
+            invocation.proceed()
             rollback()
         }
     }
