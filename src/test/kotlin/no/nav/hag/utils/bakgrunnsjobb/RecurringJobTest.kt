@@ -1,11 +1,13 @@
 package no.nav.hag.utils.bakgrunnsjobb
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.io.IOException
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class RecurringJobTest {
     private val testCoroutineScope = TestScope()
 
