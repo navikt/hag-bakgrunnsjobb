@@ -15,12 +15,6 @@ jobs:
           distribution: temurin
           cache: gradle
 
-      - name: Install Docker Compose
-        run: sudo apt-get update && sudo apt-get install -y docker-compose
-
-      - name: Compose up
-        run: cd docker/local && docker-compose up -d && sleep 10
-
       - name: Build with Gradle
         run: ./gradlew build test --console=plain
         env:
