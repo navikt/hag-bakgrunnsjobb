@@ -8,14 +8,14 @@ import org.junit.jupiter.api.Test
 import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class RecurringJobTest {
+class RecurringJobTest {
     private val testCoroutineScope = TestScope()
 
     val delay = 100L
     val job = TestRecurringJob(testCoroutineScope, delay)
 
     @Test
-    internal fun `StartAsync does job in coroutine and then waits`() {
+    fun `StartAsync does job in coroutine and then waits`() {
         assertThat(job.getJobCompletedCounter()).isEqualTo(0)
         job.startAsync()
         testCoroutineScope.testScheduler.apply {
@@ -34,7 +34,7 @@ internal class RecurringJobTest {
     }
 
     @Test
-    internal fun `When job fails and retry is on, ignore errors and run job again`() {
+    fun `When job fails and retry is on, ignore errors and run job again`() {
         job.failOnJob = true
         job.startAsync(retryOnFail = true)
         testCoroutineScope.testScheduler.apply {
@@ -55,7 +55,7 @@ internal class RecurringJobTest {
     }
 
     @Test
-    internal fun `When job fails and retry is off, stop processing`() {
+    fun `When job fails and retry is off, stop processing`() {
         job.failOnJob = true
         job.startAsync(retryOnFail = false)
         testCoroutineScope.testScheduler.apply {
@@ -75,7 +75,7 @@ internal class RecurringJobTest {
     }
 
     @Test
-    internal fun `Stopping the job prevents new execution`() {
+    fun `Stopping the job prevents new execution`() {
         job.startAsync()
         testCoroutineScope.testScheduler.apply {
             advanceTimeBy(delay)
