@@ -3,13 +3,14 @@ package no.nav.hag.utils.bakgrunnsjobb
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 abstract class RecurringJob(
     private val coroutineScope: CoroutineScope,
     private val waitMillisBetweenRuns: Long,
 ) {
-    protected val logger = LoggerFactory.getLogger(this::class.java)
+    protected val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     protected var isRunning = false
 
@@ -22,23 +23,20 @@ abstract class RecurringJob(
     private fun scheduleAsyncJobRun(retryOnFail: Boolean) {
         coroutineScope.launch {
             delay(waitMillisBetweenRuns)
-            try {
-                if (isRunning) {
+            while (isRunning) {
+                runCatching {
                     doJob()
+                }.getOrElse {
+                    if (retryOnFail) {
+                        logger.error("Jobben feilet, men forsøker på nytt etter ${waitMillisBetweenRuns / 1000} sek", it)
+                    } else {
+                        isRunning = false
+                        throw it
+                    }
                 }
-            } catch (t: Throwable) {
-                if (retryOnFail) {
-                    logger.error("Jobben feilet, men forsøker på nytt etter ${waitMillisBetweenRuns / 1000} s ", t)
-                } else {
-                    isRunning = false
-                    throw t
-                }
+                delay(waitMillisBetweenRuns)
             }
-            if (isRunning) {
-                scheduleAsyncJobRun(retryOnFail)
-            } else {
-                logger.info("Stoppet.")
-            }
+            logger.info("Stoppet.")
         }
     }
 
