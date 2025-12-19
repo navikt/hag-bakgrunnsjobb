@@ -1,7 +1,6 @@
 package no.nav.hag.utils.bakgrunnsjobb.processing
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.test.TestScope
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
