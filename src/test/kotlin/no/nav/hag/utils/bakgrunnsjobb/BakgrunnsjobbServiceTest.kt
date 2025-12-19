@@ -55,7 +55,7 @@ class BakgrunnsjobbServiceTest {
             runCurrent()
         }
 
-        val resultSet = repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now(), setOf(BakgrunnsjobbStatus.OK), true)
+        val resultSet = repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now(), setOf(Bakgrunnsjobb.Status.OK), true)
         assertThat(resultSet)
             .hasSize(1000)
     }
@@ -75,7 +75,7 @@ class BakgrunnsjobbServiceTest {
             runCurrent()
         }
 
-        val resultSet = repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now(), setOf(BakgrunnsjobbStatus.OK), false)
+        val resultSet = repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now(), setOf(Bakgrunnsjobb.Status.OK), false)
         assertThat(resultSet)
             .hasSize(1)
 
@@ -100,7 +100,7 @@ class BakgrunnsjobbServiceTest {
         }
 
         // Den går rett til stoppet i denne testen
-        assertThat(repository.findByKjoeretidBeforeAndStatusIn(now.plusMinutes(1), setOf(BakgrunnsjobbStatus.STOPPET), false))
+        assertThat(repository.findByKjoeretidBeforeAndStatusIn(now.plusMinutes(1), setOf(Bakgrunnsjobb.Status.STOPPET), false))
             .hasSize(1)
 
         assertThat(eksempelProsesserer.bleStoppet).isTrue()
@@ -144,7 +144,7 @@ class BakgrunnsjobbServiceTest {
             service.opprettJobb<EksempelProsesserer>(data = data)
         }
         val jobber =
-            repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now().plusDays(1), setOf(BakgrunnsjobbStatus.OPPRETTET), false)
+            repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now().plusDays(1), setOf(Bakgrunnsjobb.Status.OPPRETTET), false)
         assertThat(jobber).hasSize(1)
         assertThat(jobber[0].type).isEqualTo(EksempelProsesserer.JOBB_TYPE)
         assertThat(jobber[0].data).isEqualTo(data)

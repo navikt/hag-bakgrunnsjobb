@@ -2,7 +2,6 @@ package no.nav.hag.utils.bakgrunnsjobb.exposed
 
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbRepository
-import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbStatus
 import no.nav.hag.utils.bakgrunnsjobb.exposed.ExposedBakgrunnsjobb.behandlet
 import no.nav.hag.utils.bakgrunnsjobb.exposed.ExposedBakgrunnsjobb.data
 import no.nav.hag.utils.bakgrunnsjobb.exposed.ExposedBakgrunnsjobb.forsoek
@@ -64,7 +63,7 @@ class ExposedBakgrunnsjobRepository(
 
     override fun findByKjoeretidBeforeAndStatusIn(
         timeout: LocalDateTime,
-        tilstander: Set<BakgrunnsjobbStatus>,
+        tilstander: Set<Bakgrunnsjobb.Status>,
         alle: Boolean,
     ): List<Bakgrunnsjobb> =
         transaction(db) {

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.statement.readRawBytes
-import io.ktor.utils.io.InternalAPI
 import io.prometheus.client.Counter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,20 +15,20 @@ import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
 import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor.Companion.JOB_TYPE
 import java.time.LocalDateTime
 
+private val om =
+    ObjectMapper().apply {
+        registerKotlinModule()
+        disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        dateFormat = StdDateFormat()
+    }
+
 class BakgrunnsjobbService(
     val bakgrunnsjobbRepository: BakgrunnsjobbRepository,
-    val delayMillis: Long = 30 * 1000L,
-    val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    delayMillis: Long = 30 * 1000L,
+    coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     val bakgrunnsvarsler: Bakgrunnsvarsler = TomVarsler(),
 ) : RecurringJob(coroutineScope, delayMillis) {
     val prossesserere = HashMap<String, BakgrunnsjobbProsesserer>()
-
-    private val om =
-        ObjectMapper().apply {
-            registerKotlinModule()
-            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            dateFormat = StdDateFormat()
-        }
 
     fun startAutoClean(
         frekvensITimer: Int,
@@ -37,22 +36,30 @@ class BakgrunnsjobbService(
     ) {
         if (frekvensITimer < 1 || slettEldreEnnMaaneder < 0) {
             logger.info("startautoclean forsøkt startet med ugyldige parametre.")
-            throw java.lang.IllegalArgumentException("start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0")
+            throw IllegalArgumentException("start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0")
         }
         if (isRunning) {
             val autocleanjobber = bakgrunnsjobbRepository.findAutoCleanJobs()
 
             if (autocleanjobber.isEmpty()) {
+                val data =
+                    om.writeValueAsString(
+                        AutoCleanJobbProcessor.JobbData(
+                            slettEldre = slettEldreEnnMaaneder,
+                            interval = frekvensITimer,
+                        ),
+                    )
+
                 bakgrunnsjobbRepository.save(
                     Bakgrunnsjobb(
                         kjoeretid = LocalDateTime.now().plusHours(frekvensITimer.toLong()),
                         maksAntallForsoek = 10,
-                        data = om.writeValueAsString(AutoCleanJobbProcessor.JobbData(slettEldreEnnMaaneder, frekvensITimer)),
+                        data = data,
                         type = JOB_TYPE,
                     ),
                 )
             } else {
-                val ekisterendeAutoCleanJobb = autocleanjobber.get(0)
+                val ekisterendeAutoCleanJobb = autocleanjobber[0]
                 bakgrunnsjobbRepository.delete(ekisterendeAutoCleanJobb.uuid)
                 startAutoClean(frekvensITimer, slettEldreEnnMaaneder)
             }
@@ -118,40 +125,56 @@ class BakgrunnsjobbService(
     }
 
     fun prosesser(jobb: Bakgrunnsjobb) {
-        jobb.behandlet = LocalDateTime.now()
-        jobb.forsoek++
+        val nyBehandlet = LocalDateTime.now()
+        val nyttForsoek = jobb.forsoek + 1
 
         val prossessorForType =
             prossesserere[jobb.type]
                 ?: throw IllegalArgumentException("Det finnes ingen prossessor for typen '${jobb.type}'. Dette må konfigureres.")
 
+        val nesteKjoeretid = prossessorForType.nesteForsoek(nyttForsoek, LocalDateTime.now())
+
+        var nyStatus = jobb.status
+
         try {
-            jobb.kjoeretid = prossessorForType.nesteForsoek(jobb.forsoek, LocalDateTime.now())
-            prossessorForType.prosesser(jobb.copy())
-            jobb.status = BakgrunnsjobbStatus.OK
+            prossessorForType.prosesser(jobb)
+            nyStatus = Bakgrunnsjobb.Status.OK
             OK_JOBB_COUNTER.labels(jobb.type).inc()
         } catch (ex: Throwable) {
             val responseBody = tryGetResponseBody(ex)
-            val responseBodyMessage = if (responseBody != null) "Feil fra ekstern tjeneste: $responseBody" else ""
-            jobb.status = if (jobb.forsoek >= jobb.maksAntallForsoek) BakgrunnsjobbStatus.STOPPET else BakgrunnsjobbStatus.FEILET
-            if (jobb.status == BakgrunnsjobbStatus.STOPPET) {
-                logger.error("Jobb ${jobb.uuid} feilet permanent og ble stoppet fra å kjøre igjen. $responseBodyMessage", ex)
+            val responseBodyMessage = responseBody?.let { "Feil fra ekstern tjeneste: $it" }.orEmpty()
+
+            nyStatus = if (nyttForsoek >= jobb.maksAntallForsoek) Bakgrunnsjobb.Status.STOPPET else Bakgrunnsjobb.Status.FEILET
+
+            if (nyStatus == Bakgrunnsjobb.Status.STOPPET) {
+                logger.error(
+                    "Jobb ${jobb.uuid} feilet permanent og ble stoppet fra å kjøre igjen. $responseBodyMessage",
+                    ex,
+                )
                 STOPPET_JOBB_COUNTER.labels(jobb.type).inc()
                 bakgrunnsvarsler.rapporterPermanentFeiletJobb()
                 tryStopAction(prossessorForType, jobb)
             } else {
-                logger.error("Jobb ${jobb.uuid} feilet, forsøker igjen ${jobb.kjoeretid}. $responseBodyMessage", ex)
+                logger.error("Jobb ${jobb.uuid} feilet, forsøker igjen $nesteKjoeretid. $responseBodyMessage", ex)
                 FEILET_JOBB_COUNTER.labels(jobb.type).inc()
             }
         } finally {
-            bakgrunnsjobbRepository.update(jobb)
+            val oppdatertJobb =
+                jobb.copy(
+                    behandlet = nyBehandlet,
+                    status = nyStatus,
+                    kjoeretid = nesteKjoeretid,
+                    forsoek = nyttForsoek,
+                )
+
+            bakgrunnsjobbRepository.update(oppdatertJobb)
         }
     }
 
     fun finnVentende(alle: Boolean = false): List<Bakgrunnsjobb> =
         bakgrunnsjobbRepository.findByKjoeretidBeforeAndStatusIn(
             LocalDateTime.now(),
-            setOf(BakgrunnsjobbStatus.OPPRETTET, BakgrunnsjobbStatus.FEILET),
+            setOf(Bakgrunnsjobb.Status.OPPRETTET, Bakgrunnsjobb.Status.FEILET),
             alle,
         )
 
@@ -166,19 +189,16 @@ class BakgrunnsjobbService(
             logger.error("Jobben ${jobb.uuid} feilet i sin opprydningsjobb!", ex)
         }
     }
-
-    @OptIn(InternalAPI::class) // TODO: Fix
-    private fun tryGetResponseBody(jobException: Throwable): String? {
-        if (jobException is ResponseException) {
-            return try {
-                runBlocking { jobException.response.readRawBytes().decodeToString() }
-            } catch (_: Exception) {
-                null
-            }
-        }
-        return null
-    }
 }
+
+private fun tryGetResponseBody(jobException: Throwable): String? =
+    if (jobException is ResponseException) {
+        runCatching {
+            runBlocking { jobException.response.readRawBytes().decodeToString() }
+        }.getOrNull()
+    } else {
+        null
+    }
 
 /**
  * Interface for en klasse som kan prosessere en bakgrunnsjobbstype
@@ -237,7 +257,7 @@ interface BakgrunnsjobbProsesserer {
     }
 }
 
-val FEILET_JOBB_COUNTER =
+private val FEILET_JOBB_COUNTER =
     Counter
         .build()
         .namespace("helsearbeidsgiver")
@@ -246,7 +266,7 @@ val FEILET_JOBB_COUNTER =
         .help("Teller jobber som har midlertidig feilet, men vil bli forsøkt igjen")
         .register()
 
-val STOPPET_JOBB_COUNTER =
+private val STOPPET_JOBB_COUNTER =
     Counter
         .build()
         .namespace("helsearbeidsgiver")
@@ -255,7 +275,7 @@ val STOPPET_JOBB_COUNTER =
         .help("Teller jobber som har feilet permanent og må følges opp")
         .register()
 
-val OK_JOBB_COUNTER =
+private val OK_JOBB_COUNTER =
     Counter
         .build()
         .namespace("helsearbeidsgiver")

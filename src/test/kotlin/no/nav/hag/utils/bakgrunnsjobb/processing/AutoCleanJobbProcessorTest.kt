@@ -6,7 +6,6 @@ import kotlinx.coroutines.test.TestScope
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbRepository
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbService
-import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbStatus
 import no.nav.hag.utils.bakgrunnsjobb.MockBakgrunnsjobbRepository
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -15,7 +14,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class AutoCleanJobbProcessorTest {
-    val now = LocalDateTime.now()
+    val now: LocalDateTime = LocalDateTime.now()
     lateinit var autoCleanJobbProcessor: AutoCleanJobbProcessor
     lateinit var bakgrunnsjobbRepository: BakgrunnsjobbRepository
     lateinit var bakgrunnsjobbService: BakgrunnsjobbService
@@ -25,7 +24,7 @@ class AutoCleanJobbProcessorTest {
             AutoCleanJobbProcessor.JOB_TYPE,
             now,
             now,
-            BakgrunnsjobbStatus.OPPRETTET,
+            Bakgrunnsjobb.Status.OPPRETTET,
             now,
             0,
             3,
@@ -37,7 +36,7 @@ class AutoCleanJobbProcessorTest {
             AutoCleanJobbProcessor.JOB_TYPE,
             now,
             now,
-            BakgrunnsjobbStatus.OPPRETTET,
+            Bakgrunnsjobb.Status.OPPRETTET,
             now,
             0,
             3,
@@ -49,7 +48,7 @@ class AutoCleanJobbProcessorTest {
             "test",
             now.minusMonths(3),
             now.minusMonths(3),
-            BakgrunnsjobbStatus.OK,
+            Bakgrunnsjobb.Status.OK,
             now.minusMonths(3),
             0,
             3,
@@ -104,6 +103,6 @@ class AutoCleanJobbProcessorTest {
         Assertions.assertThat(bakgrunnsjobbRepository.findAutoCleanJobs().size == 1)
         bakgrunnsjobbService.stop()
         autoCleanJobbProcessor.prosesser(bakgrunnsjobbSlettEldreEnn2)
-        Assertions.assertThat(bakgrunnsjobbRepository.findAutoCleanJobs().size == 0)
+        Assertions.assertThat(bakgrunnsjobbRepository.findAutoCleanJobs().isEmpty())
     }
 }

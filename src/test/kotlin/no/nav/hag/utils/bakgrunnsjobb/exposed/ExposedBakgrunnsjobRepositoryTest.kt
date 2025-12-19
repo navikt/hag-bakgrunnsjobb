@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
-import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbStatus
 import no.nav.hag.utils.bakgrunnsjobb.TransactionalExtension
 import no.nav.hag.utils.bakgrunnsjobb.config.createLocalHikariConfig
 import org.jetbrains.exposed.sql.Database
@@ -49,7 +48,7 @@ class ExposedBakgrunnsjobRepositoryTest {
                     type = "testType",
                     opprettet = testOpprettet,
                     behandlet = null,
-                    status = BakgrunnsjobbStatus.OPPRETTET,
+                    status = Bakgrunnsjobb.Status.OPPRETTET,
                     kjoeretid = testKjoeretid,
                     forsoek = 1,
                     maksAntallForsoek = 3,
@@ -99,7 +98,7 @@ class ExposedBakgrunnsjobRepositoryTest {
                     type = "testType",
                     opprettet = testOpprettet,
                     behandlet = null,
-                    status = BakgrunnsjobbStatus.OPPRETTET,
+                    status = Bakgrunnsjobb.Status.OPPRETTET,
                     kjoeretid = testKjoeretid,
                     forsoek = 0,
                     maksAntallForsoek = 3,
@@ -113,7 +112,7 @@ class ExposedBakgrunnsjobRepositoryTest {
                     type = "testType",
                     opprettet = testOpprettet,
                     behandlet = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES),
-                    status = BakgrunnsjobbStatus.OK,
+                    status = Bakgrunnsjobb.Status.OK,
                     kjoeretid = testKjoeretid,
                     forsoek = 1,
                     maksAntallForsoek = 3,

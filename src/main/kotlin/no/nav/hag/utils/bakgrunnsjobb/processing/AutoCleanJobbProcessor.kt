@@ -13,7 +13,7 @@ class AutoCleanJobbProcessor(
     private val om: ObjectMapper,
 ) : BakgrunnsjobbProsesserer {
     companion object {
-        val JOB_TYPE = "bakgrunnsjobb-autoclean"
+        const val JOB_TYPE = "bakgrunnsjobb-autoclean"
     }
 
     override val type: String get() = JOB_TYPE
@@ -27,6 +27,6 @@ class AutoCleanJobbProcessor(
 
     data class JobbData(
         val slettEldre: Long,
-        var interval: Int,
+        val interval: Int,
     )
 }

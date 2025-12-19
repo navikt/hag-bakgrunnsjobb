@@ -2,7 +2,7 @@ package no.nav.hag.utils.bakgrunnsjobb.exposed
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbStatus
+import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.datetime
 import org.jetbrains.exposed.sql.json.jsonb
@@ -12,7 +12,7 @@ object ExposedBakgrunnsjobb : Table("bakgrunnsjobb") {
     val type = varchar("type", 100)
     val behandlet = datetime("behandlet").nullable()
     val opprettet = datetime("opprettet")
-    val status = enumerationByName("status", 50, BakgrunnsjobbStatus::class)
+    val status = enumerationByName("status", 50, Bakgrunnsjobb.Status::class)
     val kjoeretid = datetime("kjoeretid")
     val forsoek = integer("forsoek").default(0)
     val maksForsoek = integer("maks_forsoek")

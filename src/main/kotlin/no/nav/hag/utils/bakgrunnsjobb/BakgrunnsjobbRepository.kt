@@ -21,7 +21,7 @@ interface BakgrunnsjobbRepository {
 
     fun findByKjoeretidBeforeAndStatusIn(
         timeout: LocalDateTime,
-        tilstander: Set<BakgrunnsjobbStatus>,
+        tilstander: Set<Bakgrunnsjobb.Status>,
         alle: Boolean,
     ): List<Bakgrunnsjobb>
 
@@ -49,7 +49,7 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
 
     override fun findByKjoeretidBeforeAndStatusIn(
         timeout: LocalDateTime,
-        tilstander: Set<BakgrunnsjobbStatus>,
+        tilstander: Set<Bakgrunnsjobb.Status>,
         alle: Boolean,
     ): List<Bakgrunnsjobb> =
         jobs.values
@@ -73,7 +73,7 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
         val someMonthsAgo = LocalDateTime.now().minusMonths(months)
         jobs.values
             .filter {
-                it.behandlet?.isBefore(someMonthsAgo) == true && it.status.equals(BakgrunnsjobbStatus.OK)
+                it.behandlet?.isBefore(someMonthsAgo) == true && it.status.equals(Bakgrunnsjobb.Status.OK)
             }.map { it.uuid }
             .forEach {
                 jobs.remove(it)
@@ -112,17 +112,17 @@ class PostgresBakgrunnsjobbRepository(
     private val selectByIdStatement = """select * from $tableName where jobb_id = ?""".trimIndent()
 
     private val selectAutoClean =
-        """SELECT * from $tableName WHERE status IN ('${BakgrunnsjobbStatus.OPPRETTET}','${BakgrunnsjobbStatus.FEILET}') AND type = '${AutoCleanJobbProcessor.JOB_TYPE}'"""
+        """SELECT * from $tableName WHERE status IN ('${Bakgrunnsjobb.Status.OPPRETTET}','${Bakgrunnsjobb.Status.FEILET}') AND type = '${AutoCleanJobbProcessor.JOB_TYPE}'"""
             .trimIndent()
 
     private val selectOkAutoClean =
-        """SELECT * from $tableName WHERE status = '${BakgrunnsjobbStatus.OK}' AND type = '${AutoCleanJobbProcessor.JOB_TYPE}'"""
+        """SELECT * from $tableName WHERE status = '${Bakgrunnsjobb.Status.OK}' AND type = '${AutoCleanJobbProcessor.JOB_TYPE}'"""
             .trimIndent()
 
     private val deleteStatement = "DELETE FROM $tableName where jobb_id = ?::uuid"
 
     private val deleteOldJobsStatement =
-        """DELETE FROM $tableName WHERE status = '${BakgrunnsjobbStatus.OK}' AND behandlet < ?"""
+        """DELETE FROM $tableName WHERE status = '${Bakgrunnsjobb.Status.OK}' AND behandlet < ?"""
             .trimIndent()
 
     private val deleteAllStatement = "DELETE FROM $tableName"
@@ -219,7 +219,7 @@ class PostgresBakgrunnsjobbRepository(
 
     override fun findByKjoeretidBeforeAndStatusIn(
         timeout: LocalDateTime,
-        tilstander: Set<BakgrunnsjobbStatus>,
+        tilstander: Set<Bakgrunnsjobb.Status>,
         alle: Boolean,
     ): List<Bakgrunnsjobb> {
         val selectString =
@@ -251,7 +251,7 @@ class PostgresBakgrunnsjobbRepository(
                         it.getString("type"),
                         it.getTimestamp("behandlet")?.toLocalDateTime(),
                         it.getTimestamp("opprettet").toLocalDateTime(),
-                        BakgrunnsjobbStatus.valueOf(it.getString("status")),
+                        Bakgrunnsjobb.Status.valueOf(it.getString("status")),
                         it.getTimestamp("kjoeretid").toLocalDateTime(),
                         it.getInt("forsoek"),
                         it.getInt("maks_forsoek"),
