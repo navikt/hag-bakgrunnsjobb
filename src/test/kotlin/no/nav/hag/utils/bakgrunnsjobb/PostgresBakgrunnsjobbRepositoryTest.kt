@@ -35,7 +35,7 @@ class PostgresBakgrunnsjobbRepositoryTest {
                 "test",
                 now,
                 now,
-                BakgrunnsjobbStatus.OPPRETTET,
+                Bakgrunnsjobb.Status.OPPRETTET,
                 now,
                 0,
                 3,
@@ -44,7 +44,7 @@ class PostgresBakgrunnsjobbRepositoryTest {
 
         repo.save(bakgrunnsjobb)
 
-        val jobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(BakgrunnsjobbStatus.OPPRETTET), true)
+        val jobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.OPPRETTET), true)
         assertThat(jobs).hasSize(1)
 
         val job = jobs.first()
@@ -53,21 +53,23 @@ class PostgresBakgrunnsjobbRepositoryTest {
         assertThat(job.opprettet).isEqualToIgnoringNanos(now)
         assertThat(job.behandlet).isEqualToIgnoringNanos(now)
         assertThat(job.kjoeretid).isEqualToIgnoringNanos(now)
-        assertThat(job.status).isEqualTo(BakgrunnsjobbStatus.OPPRETTET)
+        assertThat(job.status).isEqualTo(Bakgrunnsjobb.Status.OPPRETTET)
         assertThat(job.forsoek).isEqualTo(0)
         assertThat(job.maksAntallForsoek).isEqualTo(3)
         assertThat(job.data).isEqualTo("{}")
 
-        job.status = BakgrunnsjobbStatus.FEILET
+        repo.update(
+            job.copy(
+                status = Bakgrunnsjobb.Status.FEILET,
+            ),
+        )
 
-        repo.update(job)
-
-        val failedJobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(BakgrunnsjobbStatus.FEILET), true)
+        val failedJobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.FEILET), true)
         assertThat(failedJobs).hasSize(1)
 
         repo.delete(job.uuid)
 
-        val noJobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(BakgrunnsjobbStatus.FEILET), true)
+        val noJobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.FEILET), true)
         assertThat(noJobs).isEmpty()
     }
 
@@ -80,7 +82,7 @@ class PostgresBakgrunnsjobbRepositoryTest {
                 AutoCleanJobbProcessor.JOB_TYPE,
                 now,
                 now,
-                BakgrunnsjobbStatus.OPPRETTET,
+                Bakgrunnsjobb.Status.OPPRETTET,
                 now,
                 0,
                 3,
@@ -106,7 +108,7 @@ class PostgresBakgrunnsjobbRepositoryTest {
                 "test",
                 null,
                 now,
-                BakgrunnsjobbStatus.OPPRETTET,
+                Bakgrunnsjobb.Status.OPPRETTET,
                 now,
                 0,
                 3,
@@ -115,7 +117,7 @@ class PostgresBakgrunnsjobbRepositoryTest {
 
         repo.save(bakgrunnsjobb)
 
-        val jobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(BakgrunnsjobbStatus.OPPRETTET), true)
+        val jobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.OPPRETTET), true)
         assertThat(jobs).hasSize(1)
         assertThat(jobs.first().behandlet).isNull()
     }
@@ -129,7 +131,7 @@ class PostgresBakgrunnsjobbRepositoryTest {
                 "bakgrunnsjobb-autoclean",
                 now.minusMonths(3),
                 now,
-                BakgrunnsjobbStatus.OK,
+                Bakgrunnsjobb.Status.OK,
                 now.minusMonths(3),
                 0,
                 3,
@@ -150,7 +152,7 @@ class PostgresBakgrunnsjobbRepositoryTest {
                 "bakgrunnsjobb-autoclean",
                 now.minusMonths(2),
                 now,
-                BakgrunnsjobbStatus.OK,
+                Bakgrunnsjobb.Status.OK,
                 now.minusMonths(2),
                 0,
                 3,
