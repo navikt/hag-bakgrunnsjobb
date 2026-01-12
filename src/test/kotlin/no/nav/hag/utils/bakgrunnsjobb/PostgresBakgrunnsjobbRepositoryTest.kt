@@ -1,28 +1,35 @@
 package no.nav.hag.utils.bakgrunnsjobb
 
 import com.zaxxer.hikari.HikariDataSource
-import no.nav.hag.utils.bakgrunnsjobb.config.createLocalHikariConfig
+import no.nav.hag.utils.bakgrunnsjobb.config.WithPostgresContainer
+import no.nav.hag.utils.bakgrunnsjobb.config.createHikariConfig
+import no.nav.hag.utils.bakgrunnsjobb.config.migrate
 import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.time.LocalDateTime
 import java.util.UUID
 
-class PostgresBakgrunnsjobbRepositoryTest {
-    lateinit var repo: PostgresBakgrunnsjobbRepository
-    lateinit var dataSource: HikariDataSource
-    val now = LocalDateTime.now()
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class PostgresBakgrunnsjobbRepositoryTest : WithPostgresContainer() {
+    val hikariConfig = createHikariConfig(postgresContainer)
+    val repo =
+        PostgresBakgrunnsjobbRepository(
+            dataSource = HikariDataSource(hikariConfig),
+        )
 
-    @BeforeEach
-    internal fun setUp() {
-        dataSource = HikariDataSource(createLocalHikariConfig())
-        repo = PostgresBakgrunnsjobbRepository(dataSource)
+    val now: LocalDateTime = LocalDateTime.now()
+
+    @BeforeAll
+    fun migrateDb() {
+        migrate(hikariConfig)
     }
 
     @AfterEach
-    internal fun cleanUp() {
+    fun cleanUp() {
         repo.deleteAll()
     }
 

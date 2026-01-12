@@ -4,19 +4,13 @@ HAG-bgjobb (HelseArbeidsGiver Bakgrunnsjobb)
 Lar deg opprette jobber i database som polles og kjører i bakgrunnen.
 Det er mulig å konfigurere rekjøring ved feil.
 
-Koden er trukket ut fra hag-felles-backend-biblioteket (deprecated) og oppgradert til ktor2.
+Koden er trukket ut fra hag-felles-backend-biblioteket (deprecated) og oppgradert til Ktor 3.
 
 # Komme i gang
 
-Kjøre tester lokalt:
+Kjøre tester lokalt: `./gradlew build`
 
-Starte lokal database:
-cd docker/local
-docker-compose up --remove-orphans
-
-gradle build
-
-For å ta i bruk: Importer biblioteket (gradle):
+For å ta i bruk, importer biblioteket (gradle):
 ````
 implementation("no.nav.helsearbeidsgiver:hag-bakgrunnsjobb:$bakgrunnsjobbVersion")
 ````
@@ -43,9 +37,9 @@ Gjør deretter release fra github-gui, versjon settes lik som versjon i build-fi
 
 # Henvendelser
 
-Spørsmål knyttet til koden eller prosjektet kan stilles som issues her på GitHub
+Spørsmål knyttet til koden eller prosjektet kan stilles som [issues](https://github.com/navikt/hag-bakgrunnsjobb/issues/new) her på GitHub
 
 
 ## For NAV-ansatte
 
-Interne henvendelser kan sendes via Slack i kanalen #helse-arbeidsgiver.
+Interne henvendelser kan sendes via Slack i kanalen [#helse-arbeidsgiver](https://nav-it.slack.com/archives/CSMN6320N).

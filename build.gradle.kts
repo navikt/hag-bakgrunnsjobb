@@ -57,6 +57,7 @@ dependencies {
     val postgresqlVersion: String by project
     val prometheusVersion: String by project
     val slf4jVersion: String by project
+    val testcontainersVersion: String by project
 
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
@@ -75,15 +76,16 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
 
-    testImplementation(kotlin("test"))
     testImplementation("ch.qos.logback:logback-classic:$logbackVersion")
     testImplementation("com.zaxxer:HikariCP:$hikariVersion")
     testImplementation("org.assertj:assertj-core:$assertJVersion")
     testImplementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinxCoroutinesVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
-    testImplementation("org.postgresql:postgresql:$postgresqlVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
+    testImplementation("org.testcontainers:testcontainers-postgresql:$testcontainersVersion")
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:$junitJupiterVersion")
+    testRuntimeOnly("org.postgresql:postgresql:$postgresqlVersion")
 }
 
 fun RepositoryHandler.mavenNav(repo: String): MavenArtifactRepository {
