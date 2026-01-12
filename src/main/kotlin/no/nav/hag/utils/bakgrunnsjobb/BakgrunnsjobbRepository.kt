@@ -3,6 +3,7 @@ package no.nav.hag.utils.bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
 import java.sql.Connection
 import java.sql.Date
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -14,6 +15,8 @@ interface BakgrunnsjobbRepository {
     fun getById(id: UUID): Bakgrunnsjobb?
 
     fun save(bakgrunnsjobb: Bakgrunnsjobb)
+
+    fun update(bakgrunnsjobb: Bakgrunnsjobb)
 
     fun findAutoCleanJobs(): List<Bakgrunnsjobb>
 
@@ -30,8 +33,6 @@ interface BakgrunnsjobbRepository {
     fun deleteAll()
 
     fun deleteOldOkJobs(months: Long)
-
-    fun update(bakgrunnsjobb: Bakgrunnsjobb)
 }
 
 class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
@@ -43,9 +44,14 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
         jobs.put(bakgrunnsjobb.uuid, bakgrunnsjobb)
     }
 
-    override fun findAutoCleanJobs(): List<Bakgrunnsjobb> = jobs.values.filter { it.type.equals(AutoCleanJobbProcessor.JOB_TYPE) }
+    override fun update(bakgrunnsjobb: Bakgrunnsjobb) {
+        delete(bakgrunnsjobb.uuid)
+        save(bakgrunnsjobb)
+    }
 
-    override fun findOkAutoCleanJobs(): List<Bakgrunnsjobb> = jobs.values.filter { it.type.equals(AutoCleanJobbProcessor.JOB_TYPE) }
+    override fun findAutoCleanJobs(): List<Bakgrunnsjobb> = jobs.values.filter { it.type == AutoCleanJobbProcessor.JOB_TYPE }
+
+    override fun findOkAutoCleanJobs(): List<Bakgrunnsjobb> = jobs.values.filter { it.type == AutoCleanJobbProcessor.JOB_TYPE }
 
     override fun findByKjoeretidBeforeAndStatusIn(
         timeout: LocalDateTime,
@@ -64,16 +70,11 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
         jobs.clear()
     }
 
-    override fun update(bakgrunnsjobb: Bakgrunnsjobb) {
-        delete(bakgrunnsjobb.uuid)
-        save(bakgrunnsjobb)
-    }
-
     override fun deleteOldOkJobs(months: Long) {
         val someMonthsAgo = LocalDateTime.now().minusMonths(months)
         jobs.values
             .filter {
-                it.behandlet?.isBefore(someMonthsAgo) == true && it.status.equals(Bakgrunnsjobb.Status.OK)
+                it.behandlet?.isBefore(someMonthsAgo) == true && it.status == Bakgrunnsjobb.Status.OK
             }.map { it.uuid }
             .forEach {
                 jobs.remove(it)
@@ -84,214 +85,137 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
 class PostgresBakgrunnsjobbRepository(
     val dataSource: DataSource,
 ) : BakgrunnsjobbRepository {
-    private val tableName = "bakgrunnsjobb"
-
-    private val insertStatement =
-        """INSERT INTO $tableName (jobb_id, type, behandlet, opprettet, status, kjoeretid, forsoek, maks_forsoek, data) VALUES (?::uuid,?,?,?,?,?,?,?,?::json)"""
-            .trimIndent()
-
-    private val updateStatement =
-        """
-        UPDATE $tableName
-        SET behandlet = ?
-         , status = ?
-         , kjoeretid = ?
-         , forsoek = ?
-         , data = ?::json
-        where jobb_id = ?::uuid
-        
-        """.trimIndent()
-
-    private val selectStatement =
-        """
-        select * from $tableName where kjoeretid < ? and status = ANY(?)
-        """.trimIndent()
-
-    private val selectStatementWithLimit = selectStatement + " limit 100".trimIndent()
-
-    private val selectByIdStatement = """select * from $tableName where jobb_id = ?""".trimIndent()
-
-    private val selectAutoClean =
-        """SELECT * from $tableName WHERE status IN ('${Bakgrunnsjobb.Status.OPPRETTET}','${Bakgrunnsjobb.Status.FEILET}') AND type = '${AutoCleanJobbProcessor.JOB_TYPE}'"""
-            .trimIndent()
-
-    private val selectOkAutoClean =
-        """SELECT * from $tableName WHERE status = '${Bakgrunnsjobb.Status.OK}' AND type = '${AutoCleanJobbProcessor.JOB_TYPE}'"""
-            .trimIndent()
-
-    private val deleteStatement = "DELETE FROM $tableName where jobb_id = ?::uuid"
-
-    private val deleteOldJobsStatement =
-        """DELETE FROM $tableName WHERE status = '${Bakgrunnsjobb.Status.OK}' AND behandlet < ?"""
-            .trimIndent()
-
-    private val deleteAllStatement = "DELETE FROM $tableName"
-
-    override fun getById(id: UUID): Bakgrunnsjobb? {
-        dataSource.connection.use {
-            return getById(id, it)
-        }
-    }
-
-    fun getById(
-        id: UUID,
-        connection: Connection,
-    ): Bakgrunnsjobb? {
-        connection.prepareStatement("select * from $tableName where jobb_id = '$id'").use {
-            val rs = it.executeQuery()
-            val resultList = resultsetTilResultatliste(rs)
-            if (resultList.size == 0) {
-                return null
-            } else {
-                return resultList[0]
-            }
-        }
-    }
+    override fun getById(id: UUID): Bakgrunnsjobb? =
+        executeQuery(BakgrunnsjobbTable.selectByIdStatement) {
+            it.setString(1, id.toString())
+        }.firstOrNull()
 
     override fun save(bakgrunnsjobb: Bakgrunnsjobb) {
-        dataSource.connection.use {
-            save(bakgrunnsjobb, it)
+        executeUpdate(BakgrunnsjobbTable.insertStatement) {
+            it.setString(1, bakgrunnsjobb.uuid.toString())
+            it.setString(2, bakgrunnsjobb.type)
+            it.setTimestamp(3, bakgrunnsjobb.behandlet?.toTimestamp())
+            it.setTimestamp(4, bakgrunnsjobb.opprettet.toTimestamp())
+            it.setString(5, bakgrunnsjobb.status.toString())
+            it.setTimestamp(6, bakgrunnsjobb.kjoeretid.toTimestamp())
+            it.setInt(7, bakgrunnsjobb.forsoek)
+            it.setInt(8, bakgrunnsjobb.maksAntallForsoek)
+            it.setString(9, bakgrunnsjobb.data)
         }
-    }
-
-    private fun save(
-        bakgrunnsjobb: Bakgrunnsjobb,
-        connection: Connection,
-    ) {
-        connection
-            .prepareStatement(insertStatement)
-            .apply {
-                setString(1, bakgrunnsjobb.uuid.toString())
-                setString(2, bakgrunnsjobb.type)
-                setTimestamp(3, bakgrunnsjobb.behandlet?.let(Timestamp::valueOf))
-                setTimestamp(4, Timestamp.valueOf(bakgrunnsjobb.opprettet))
-                setString(5, bakgrunnsjobb.status.toString())
-                setTimestamp(6, Timestamp.valueOf(bakgrunnsjobb.kjoeretid))
-                setInt(7, bakgrunnsjobb.forsoek)
-                setInt(8, bakgrunnsjobb.maksAntallForsoek)
-                setString(9, bakgrunnsjobb.data)
-            }.use {
-                it.execute()
-            }
     }
 
     override fun update(bakgrunnsjobb: Bakgrunnsjobb) {
-        dataSource.connection.use {
-            update(bakgrunnsjobb, it)
+        executeUpdate(BakgrunnsjobbTable.updateStatement) {
+            it.setTimestamp(1, bakgrunnsjobb.behandlet?.toTimestamp())
+            it.setString(2, bakgrunnsjobb.status.toString())
+            it.setTimestamp(3, bakgrunnsjobb.kjoeretid.toTimestamp())
+            it.setInt(4, bakgrunnsjobb.forsoek)
+            it.setString(5, bakgrunnsjobb.data)
+            it.setString(6, bakgrunnsjobb.uuid.toString())
         }
     }
 
-    private fun update(
-        bakgrunnsjobb: Bakgrunnsjobb,
-        connection: Connection,
-    ) {
-        connection
-            .prepareStatement(updateStatement)
-            .apply {
-                setTimestamp(1, bakgrunnsjobb.behandlet?.let(Timestamp::valueOf))
-                setString(2, bakgrunnsjobb.status.toString())
-                setTimestamp(3, Timestamp.valueOf(bakgrunnsjobb.kjoeretid))
-                setInt(4, bakgrunnsjobb.forsoek)
-                setString(5, bakgrunnsjobb.data)
-                setString(6, bakgrunnsjobb.uuid.toString())
-            }.use {
-                it.executeUpdate()
-            }
-    }
+    override fun findAutoCleanJobs(): List<Bakgrunnsjobb> = executeQuery(BakgrunnsjobbTable.selectAutoCleanStatement)
 
-    override fun findAutoCleanJobs(): List<Bakgrunnsjobb> {
-        dataSource.connection.use { con ->
-            con.prepareStatement(selectAutoClean).use {
-                val res = it.executeQuery()
-                return resultsetTilResultatliste(res)
-            }
-        }
-    }
-
-    override fun findOkAutoCleanJobs(): List<Bakgrunnsjobb> {
-        dataSource.connection.use { con ->
-            con.prepareStatement(selectOkAutoClean).use {
-                val res = it.executeQuery()
-                return resultsetTilResultatliste(res)
-            }
-        }
-    }
+    override fun findOkAutoCleanJobs(): List<Bakgrunnsjobb> = executeQuery(BakgrunnsjobbTable.selectOkAutoCleanStatement)
 
     override fun findByKjoeretidBeforeAndStatusIn(
         timeout: LocalDateTime,
         tilstander: Set<Bakgrunnsjobb.Status>,
         alle: Boolean,
     ): List<Bakgrunnsjobb> {
-        val selectString =
-            if (alle) {
-                selectStatement
-            } else {
-                selectStatementWithLimit
-            }
-        dataSource.connection.use { con ->
-            con
-                .prepareStatement(selectString)
-                .apply {
-                    setTimestamp(1, Timestamp.valueOf(timeout))
-                    setArray(2, con.createArrayOf("VARCHAR", tilstander.map { it.toString() }.toTypedArray()))
-                }.use {
-                    val res = it.executeQuery()
-                    return resultsetTilResultatliste(res)
-                }
-        }
-    }
+        val tilstanderArray = tilstander.map(Bakgrunnsjobb.Status::toString).toTypedArray()
 
-    private fun resultsetTilResultatliste(res: ResultSet): MutableList<Bakgrunnsjobb> {
-        val resultatListe = mutableListOf<Bakgrunnsjobb>()
-        res.use {
-            while (it.next()) {
-                resultatListe.add(
-                    Bakgrunnsjobb(
-                        UUID.fromString(it.getString("jobb_id")),
-                        it.getString("type"),
-                        it.getTimestamp("behandlet")?.toLocalDateTime(),
-                        it.getTimestamp("opprettet").toLocalDateTime(),
-                        Bakgrunnsjobb.Status.valueOf(it.getString("status")),
-                        it.getTimestamp("kjoeretid").toLocalDateTime(),
-                        it.getInt("forsoek"),
-                        it.getInt("maks_forsoek"),
-                        it.getString("data"),
-                    ),
-                )
+        val selectStatement =
+            if (alle) {
+                BakgrunnsjobbTable.selectStatement
+            } else {
+                BakgrunnsjobbTable.selectWithLimitStatement
             }
+
+        return executeQuery(selectStatement) { con, ps ->
+            ps.setTimestamp(1, timeout.toTimestamp())
+            ps.setArray(2, con.createArrayOf("VARCHAR", tilstanderArray))
         }
-        return resultatListe
     }
 
     override fun delete(uuid: UUID) {
-        dataSource.connection.use { con ->
-            con
-                .prepareStatement(deleteStatement)
-                .apply {
-                    setString(1, uuid.toString())
-                }.use {
-                    it.executeUpdate()
-                }
+        executeUpdate(BakgrunnsjobbTable.deleteStatement) {
+            it.setString(1, uuid.toString())
         }
     }
 
     override fun deleteAll() {
-        dataSource.connection.use { con ->
-            con.prepareStatement(deleteAllStatement).use {
-                it.executeUpdate()
-            }
-        }
+        executeUpdate(BakgrunnsjobbTable.deleteAllStatement)
     }
 
     override fun deleteOldOkJobs(months: Long) {
+        val deleteBefore = LocalDate.now().minusMonths(months).let(Date::valueOf)
+
+        executeUpdate(BakgrunnsjobbTable.deleteOldOkJobsStatement) {
+            it.setDate(1, deleteBefore)
+        }
+    }
+
+    private fun executeQuery(
+        statement: String,
+        setParameters: (PreparedStatement) -> Unit = {},
+    ): List<Bakgrunnsjobb> = executeQuery(statement) { _, ps -> setParameters(ps) }
+
+    private fun executeQuery(
+        statement: String,
+        setParameters: (Connection, PreparedStatement) -> Unit,
+    ): List<Bakgrunnsjobb> =
         dataSource.connection.use { con ->
             con
-                .prepareStatement(deleteOldJobsStatement)
-                .apply {
-                    setDate(1, Date.valueOf(LocalDate.now().minusMonths(months)))
+                .prepareStatement(statement)
+                .also {
+                    setParameters(con, it)
+                }.use {
+                    it.executeQuery().tilBakgrunnsjobber()
+                }
+        }
+
+    private fun executeUpdate(
+        statement: String,
+        setParameters: (PreparedStatement) -> Unit = {},
+    ) {
+        dataSource.connection.use { con ->
+            con
+                .prepareStatement(statement)
+                .also {
+                    setParameters(it)
                 }.use {
                     it.executeUpdate()
                 }
         }
     }
 }
+
+private fun LocalDateTime.toTimestamp(): Timestamp = Timestamp.valueOf(this)
+
+private fun ResultSet.tilBakgrunnsjobber(): List<Bakgrunnsjobb> =
+    use {
+        generateSequence { if (it.next()) it else null }
+            .map { rs ->
+                Bakgrunnsjobb(
+                    uuid = "jobb_id".readString(rs).let(UUID::fromString),
+                    type = "type".readString(rs),
+                    behandlet = "behandlet".readTimeNullable(rs),
+                    opprettet = "opprettet".readTime(rs),
+                    status = "status".readString(rs).let(Bakgrunnsjobb.Status::valueOf),
+                    kjoeretid = "kjoeretid".readTime(rs),
+                    forsoek = "forsoek".readInt(rs),
+                    maksAntallForsoek = "maks_forsoek".readInt(rs),
+                    data = "data".readString(rs),
+                )
+            }.toList()
+    }
+
+private fun String.readString(rs: ResultSet): String = rs.getString(this)
+
+private fun String.readInt(rs: ResultSet): Int = rs.getInt(this)
+
+private fun String.readTime(rs: ResultSet): LocalDateTime = rs.getTimestamp(this).toLocalDateTime()
+
+private fun String.readTimeNullable(rs: ResultSet): LocalDateTime? = rs.getTimestamp(this)?.toLocalDateTime()
