@@ -6,13 +6,15 @@ import kotlinx.coroutines.test.TestScope
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.io.IOException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RecurringJobTest {
     private val testCoroutineScope = TestScope()
 
-    val delay = 100L
-    val job = TestRecurringJob(testCoroutineScope, delay)
+    val interval = 100.milliseconds
+    val job = TestRecurringJob(testCoroutineScope, interval)
 
     @Test
     fun `StartAsync does job in coroutine and then waits`() {
@@ -26,7 +28,7 @@ class RecurringJobTest {
         assertThat(job.getJobCompletedCounter()).isEqualTo(0)
 
         testCoroutineScope.testScheduler.apply {
-            advanceTimeBy(delay)
+            advanceTimeBy(interval)
             runCurrent()
         }
 
@@ -46,7 +48,7 @@ class RecurringJobTest {
         assertThat(job.getJobCompletedCounter()).isEqualTo(0)
 
         testCoroutineScope.testScheduler.apply {
-            advanceTimeBy(delay)
+            advanceTimeBy(interval)
             runCurrent()
         }
 
@@ -66,7 +68,7 @@ class RecurringJobTest {
         assertThat(job.getCallCounter()).isEqualTo(0)
 
         testCoroutineScope.testScheduler.apply {
-            advanceTimeBy(delay)
+            advanceTimeBy(interval)
             runCurrent()
         }
 
@@ -78,7 +80,7 @@ class RecurringJobTest {
     fun `Stopping the job prevents new execution`() {
         job.startAsync()
         testCoroutineScope.testScheduler.apply {
-            advanceTimeBy(delay)
+            advanceTimeBy(interval)
             runCurrent()
         }
         job.stop()
@@ -86,7 +88,7 @@ class RecurringJobTest {
         assertThat(job.getJobCompletedCounter()).isEqualTo(1)
 
         testCoroutineScope.testScheduler.apply {
-            advanceTimeBy(delay)
+            advanceTimeBy(interval)
             runCurrent()
         }
 
@@ -95,8 +97,8 @@ class RecurringJobTest {
 
     class TestRecurringJob(
         coroutineScope: CoroutineScope,
-        waitMillisBetweenRuns: Long,
-    ) : RecurringJob(coroutineScope, waitMillisBetweenRuns) {
+        interval: Duration,
+    ) : RecurringJob(interval, coroutineScope) {
         var failOnJob: Boolean = false
         private var jobCompletedCounter = 0
 

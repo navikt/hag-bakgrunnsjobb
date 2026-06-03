@@ -59,24 +59,21 @@ dependencies {
     val slf4jVersion: String by project
     val testcontainersVersion: String by project
 
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jacksonVersion")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-jackson:$ktorVersion")
-    implementation("io.ktor:ktor-client-json:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
-    implementation("io.prometheus:simpleclient_common:$prometheusVersion")
-    implementation("io.prometheus:simpleclient_hotspot:$prometheusVersion")
-    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-json:$exposedVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
-    implementation("org.slf4j:slf4j-api:$slf4jVersion")
+    api("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    api("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+    api("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    api("org.jetbrains.exposed:exposed-json:$exposedVersion")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationVersion")
+    api("org.slf4j:slf4j-api:$slf4jVersion")
 
-    testImplementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.prometheus:simpleclient_common:$prometheusVersion")
+    implementation("tools.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("tools.jackson.module:jackson-module-kotlin:$jacksonVersion")
+
+    runtimeOnly("io.prometheus:simpleclient_hotspot:$prometheusVersion")
+
     testImplementation("com.zaxxer:HikariCP:$hikariVersion")
     testImplementation("org.assertj:assertj-core:$assertJVersion")
     testImplementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
@@ -84,6 +81,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:$junitJupiterVersion")
     testImplementation("org.testcontainers:testcontainers-postgresql:$testcontainersVersion")
 
+    testRuntimeOnly("ch.qos.logback:logback-classic:$logbackVersion")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:$junitJupiterVersion")
     testRuntimeOnly("org.postgresql:postgresql:$postgresqlVersion")
 }

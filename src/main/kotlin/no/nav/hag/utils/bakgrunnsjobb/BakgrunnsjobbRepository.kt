@@ -41,7 +41,7 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
     override fun getById(id: UUID): Bakgrunnsjobb? = jobs[id]
 
     override fun save(bakgrunnsjobb: Bakgrunnsjobb) { // TODO?? mock-impl håndterer ikke duplikater likt som ekte impl
-        jobs.put(bakgrunnsjobb.uuid, bakgrunnsjobb)
+        jobs[bakgrunnsjobb.uuid] = bakgrunnsjobb
     }
 
     override fun update(bakgrunnsjobb: Bakgrunnsjobb) {

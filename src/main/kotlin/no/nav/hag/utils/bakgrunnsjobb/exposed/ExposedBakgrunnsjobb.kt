@@ -3,12 +3,13 @@ package no.nav.hag.utils.bakgrunnsjobb.exposed
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.javatime.datetime
-import org.jetbrains.exposed.sql.json.jsonb
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.javatime.datetime
+import org.jetbrains.exposed.v1.json.jsonb
 
 object ExposedBakgrunnsjobb : Table("bakgrunnsjobb") {
-    val jobbId = uuid("jobb_id").uniqueIndex().autoGenerate()
+    val jobbId = javaUUID("jobb_id").uniqueIndex().autoGenerate()
     val type = varchar("type", 100)
     val behandlet = datetime("behandlet").nullable()
     val opprettet = datetime("opprettet")

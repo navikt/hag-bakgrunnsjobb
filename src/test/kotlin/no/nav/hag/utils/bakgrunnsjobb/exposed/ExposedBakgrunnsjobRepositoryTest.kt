@@ -8,7 +8,7 @@ import no.nav.hag.utils.bakgrunnsjobb.TransactionalExtension
 import no.nav.hag.utils.bakgrunnsjobb.config.WithPostgresContainer
 import no.nav.hag.utils.bakgrunnsjobb.config.createHikariConfig
 import no.nav.hag.utils.bakgrunnsjobb.config.migrate
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-import org.jetbrains.exposed.sql.Database as ExposedDatabase
+import org.jetbrains.exposed.v1.jdbc.Database as ExposedDatabase
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(TransactionalExtension::class)

@@ -1,16 +1,14 @@
 package no.nav.hag.utils.bakgrunnsjobb.processing
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbProsesserer
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbRepository
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbService
+import no.nav.hag.utils.bakgrunnsjobb.Jackson
 
 class AutoCleanJobbProcessor(
     private val bakgrunnsjobbRepository: BakgrunnsjobbRepository,
     private val bakgrunnsjobbService: BakgrunnsjobbService,
-    private val om: ObjectMapper,
 ) : BakgrunnsjobbProsesserer {
     companion object {
         const val JOB_TYPE = "bakgrunnsjobb-autoclean"
@@ -20,9 +18,9 @@ class AutoCleanJobbProcessor(
 
     override fun prosesser(jobb: Bakgrunnsjobb) {
         assert(jobb.data.isNotEmpty())
-        val autocleanrequest = om.readValue<JobbData>(jobb.data)
-        bakgrunnsjobbRepository.deleteOldOkJobs(autocleanrequest.slettEldre)
-        bakgrunnsjobbService.startAutoClean(autocleanrequest.interval, autocleanrequest.slettEldre)
+        val autocleanRequest = Jackson.fromJson(jobb.data)
+        bakgrunnsjobbRepository.deleteOldOkJobs(autocleanRequest.slettEldre)
+        bakgrunnsjobbService.startAutoClean(autocleanRequest.interval, autocleanRequest.slettEldre)
     }
 
     data class JobbData(

@@ -66,7 +66,7 @@ internal object BakgrunnsjobbTable {
                   '${Bakgrunnsjobb.Status.OPPRETTET}',
                   '${Bakgrunnsjobb.Status.FEILET}'
               )
-          AND type = '${AutoCleanJobbProcessor.Companion.JOB_TYPE}'
+          AND type = '${AutoCleanJobbProcessor.JOB_TYPE}'
         """.trimExcessWhitespace()
 
     val selectOkAutoCleanStatement =
@@ -74,7 +74,7 @@ internal object BakgrunnsjobbTable {
         SELECT *
         FROM $TABLE_NAME
         WHERE status = '${Bakgrunnsjobb.Status.OK}'
-          AND type = '${AutoCleanJobbProcessor.Companion.JOB_TYPE}'
+          AND type = '${AutoCleanJobbProcessor.JOB_TYPE}'
         """.trimExcessWhitespace()
 
     val deleteStatement =

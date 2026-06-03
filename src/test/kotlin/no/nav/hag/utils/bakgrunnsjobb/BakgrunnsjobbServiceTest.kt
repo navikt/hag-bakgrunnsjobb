@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BakgrunnsjobbServiceTest : WithPostgresContainer() {
@@ -23,7 +24,7 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
     val repository = PostgresBakgrunnsjobbRepository(dataSource)
 
     val testCoroutineScope = TestScope()
-    val service = BakgrunnsjobbService(repository, 1, testCoroutineScope)
+    val service = BakgrunnsjobbService(repository, 1.milliseconds, testCoroutineScope)
 
     val now = LocalDateTime.now()
     val eksempelProsesserer = EksempelProsesserer()
