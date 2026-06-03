@@ -1,7 +1,5 @@
 package no.nav.hag.utils.bakgrunnsjobb.processing
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.test.TestScope
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbRepository
@@ -12,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 class AutoCleanJobbProcessorTest {
     val now: LocalDateTime = LocalDateTime.now()
@@ -59,12 +58,8 @@ class AutoCleanJobbProcessorTest {
     fun setUp() {
         bakgrunnsjobbRepository = MockBakgrunnsjobbRepository()
         val testScope = TestScope()
-        bakgrunnsjobbService = BakgrunnsjobbService(bakgrunnsjobbRepository, 1, testScope)
-        val objectMapper =
-            ObjectMapper().apply {
-                registerKotlinModule()
-            }
-        autoCleanJobbProcessor = AutoCleanJobbProcessor(bakgrunnsjobbRepository, bakgrunnsjobbService, objectMapper)
+        bakgrunnsjobbService = BakgrunnsjobbService(bakgrunnsjobbRepository, 1.milliseconds, testScope)
+        autoCleanJobbProcessor = AutoCleanJobbProcessor(bakgrunnsjobbRepository, bakgrunnsjobbService)
     }
 
     @Test

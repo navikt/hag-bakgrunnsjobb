@@ -1,9 +1,5 @@
 package no.nav.hag.utils.bakgrunnsjobb
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.util.StdDateFormat
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.statement.readRawBytes
 import io.prometheus.client.Counter
@@ -14,20 +10,15 @@ import kotlinx.serialization.json.JsonElement
 import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
 import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor.Companion.JOB_TYPE
 import java.time.LocalDateTime
-
-private val om =
-    ObjectMapper().apply {
-        registerKotlinModule()
-        disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        dateFormat = StdDateFormat()
-    }
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class BakgrunnsjobbService(
     val bakgrunnsjobbRepository: BakgrunnsjobbRepository,
-    delayMillis: Long = 30 * 1000L,
+    interval: Duration = 30.seconds,
     coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     val bakgrunnsvarsler: Bakgrunnsvarsler = TomVarsler(),
-) : RecurringJob(coroutineScope, delayMillis) {
+) : RecurringJob(interval, coroutineScope) {
     val prossesserere = HashMap<String, BakgrunnsjobbProsesserer>()
 
     fun startAutoClean(
@@ -43,7 +34,7 @@ class BakgrunnsjobbService(
 
             if (autocleanjobber.isEmpty()) {
                 val data =
-                    om.writeValueAsString(
+                    Jackson.toJson(
                         AutoCleanJobbProcessor.JobbData(
                             slettEldre = slettEldreEnnMaaneder,
                             interval = frekvensITimer,

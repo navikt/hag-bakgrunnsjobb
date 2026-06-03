@@ -5,36 +5,37 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import kotlin.time.Duration
 
 abstract class RecurringJob(
+    private val interval: Duration,
     private val coroutineScope: CoroutineScope,
-    private val waitMillisBetweenRuns: Long,
 ) {
     protected val logger: Logger = LoggerFactory.getLogger(this::class.java)
 
     protected var isRunning = false
 
     fun startAsync(retryOnFail: Boolean = false) {
-        logger.info("Starter opp")
+        logger.info("Starter opp.")
         isRunning = true
         scheduleAsyncJobRun(retryOnFail)
     }
 
     private fun scheduleAsyncJobRun(retryOnFail: Boolean) {
         coroutineScope.launch {
-            delay(waitMillisBetweenRuns)
+            delay(interval)
             while (isRunning) {
                 runCatching {
                     doJob()
                 }.getOrElse {
                     if (retryOnFail) {
-                        logger.error("Jobben feilet, men forsøker på nytt etter ${waitMillisBetweenRuns / 1000} sek", it)
+                        logger.error("Jobben feilet, men forsøker på nytt etter ${interval.inWholeSeconds} sek.", it)
                     } else {
                         isRunning = false
                         throw it
                     }
                 }
-                delay(waitMillisBetweenRuns)
+                delay(interval)
             }
             logger.info("Stoppet.")
         }
