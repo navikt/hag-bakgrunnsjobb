@@ -17,6 +17,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BakgrunnsjobbServiceTest : WithPostgresContainer() {
     val hikariConfig = createHikariConfig(postgresContainer)
@@ -26,7 +27,7 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
     val testCoroutineScope = TestScope()
     val service = BakgrunnsjobbService(repository, 1.milliseconds, testCoroutineScope)
 
-    val now = LocalDateTime.now()
+    val now: LocalDateTime = LocalDateTime.now()
     val eksempelProsesserer = EksempelProsesserer()
 
     @BeforeAll
@@ -40,31 +41,34 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
         service.startAsync(true)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `sjekk ytelse `() {
-        repeat(1000) {
-            val uuid = UUID.randomUUID()
-            val data = """{"status": "ok", "uuid": "$uuid" }"""
-            val testJobb =
-                Bakgrunnsjobb(
-                    type = EksempelProsesserer.JOBB_TYPE,
-                    data = data,
-                )
-            repository.save(testJobb)
-        }
+        val ider =
+            List(1000) {
+                val uuid = UUID.randomUUID()
+                val data = """{"status": "ok", "uuid": "$uuid" }"""
+                val testJobb =
+                    Bakgrunnsjobb(
+                        type = EksempelProsesserer.JOBB_TYPE,
+                        data = data,
+                    )
+                repository.save(testJobb)
+                testJobb.uuid to uuid
+            }
 
         testCoroutineScope.testScheduler.apply {
             advanceTimeBy(1)
             runCurrent()
         }
 
-        val resultSet = repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now(), setOf(Bakgrunnsjobb.Status.OK), true)
-        assertThat(resultSet)
-            .hasSize(1000)
+        ider.forEach { (jobbId, dataId) ->
+            repository.getById(jobbId).also {
+                assertThat(it?.status).isEqualTo(Bakgrunnsjobb.Status.OK)
+                assertThat(it?.data).contains(dataId.toString())
+            }
+        }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `sett jobb til ok hvis ingen feil `() {
         val data = """{"status": "ok"}"""
@@ -79,7 +83,7 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
             runCurrent()
         }
 
-        val resultSet = repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now(), setOf(Bakgrunnsjobb.Status.OK), false)
+        val resultSet = repository.findByKjoeretidBeforeAndStatusIn(LocalDateTime.now(), setOf(Bakgrunnsjobb.Status.OK))
         assertThat(resultSet)
             .hasSize(1)
 
@@ -87,7 +91,6 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
         assertThat(completeJob.forsoek).isEqualTo(1)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `sett jobb til stoppet og kjør stoppet-funksjonen hvis feiler for mye `() {
         val testJobb =
@@ -108,7 +111,6 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
             repository.findByKjoeretidBeforeAndStatusIn(
                 now.plusMinutes(1),
                 setOf(Bakgrunnsjobb.Status.STOPPET),
-                false,
             ),
         ).hasSize(1)
 
@@ -162,7 +164,6 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
             repository.findByKjoeretidBeforeAndStatusIn(
                 LocalDateTime.now().plusDays(1),
                 setOf(Bakgrunnsjobb.Status.OPPRETTET),
-                false,
             )
         assertThat(jobber).hasSize(1)
         assertThat(jobber[0].type).isEqualTo(EksempelProsesserer.JOBB_TYPE)

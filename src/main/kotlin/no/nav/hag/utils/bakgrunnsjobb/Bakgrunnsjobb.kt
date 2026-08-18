@@ -17,29 +17,19 @@ data class Bakgrunnsjobb(
     val dataJson: JsonElement? = null,
 ) {
     enum class Status {
-        /**
-         * Oppgaven er opprettet og venter på kjøring
-         */
+        /** Oppgaven er opprettet og venter på kjøring. */
         OPPRETTET,
 
-        /**
-         * Oppgaven har blitt forsøkt kjørt, men feilet. Den vil bli kjørt igjen til den når maks antall forsøk
-         */
-        FEILET,
-
-        /**
-         * Oppgaven ble kjørt maks antall forsøk og trenger nå manuell håndtering
-         */
-        STOPPET,
-
-        /**
-         * Oppgaven ble kjørt OK
-         */
+        /** Oppgaven ble kjørt OK. */
         OK,
 
-        /**
-         * Oppgaven er manuelt avbrutt
-         */
+        /** Oppgaven har blitt forsøkt kjørt, men feilet. Den vil bli kjørt igjen til den når maks antall forsøk. */
+        FEILET,
+
+        /** Oppgaven ble kjørt maks antall forsøk og trenger nå manuell håndtering. */
+        STOPPET,
+
+        /** Oppgaven er manuelt avbrutt. */
         AVBRUTT,
     }
 }
