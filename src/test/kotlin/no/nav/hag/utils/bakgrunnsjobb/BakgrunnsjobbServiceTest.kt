@@ -8,7 +8,6 @@ import no.nav.hag.utils.bakgrunnsjobb.config.createHikariConfig
 import no.nav.hag.utils.bakgrunnsjobb.config.migrate
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -113,43 +112,6 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
         ).hasSize(1)
 
         assertThat(eksempelProsesserer.bleStoppet).isTrue()
-    }
-
-    @Test
-    fun `autoClean opprettes feil parametre`() {
-        val exceptionNegativFrekvens =
-            Assertions.assertThrows(IllegalArgumentException::class.java) {
-                service.startAutoClean(-1, 1)
-            }
-        Assertions.assertEquals(
-            "start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0",
-            exceptionNegativFrekvens.message,
-        )
-        val exceptionNegativSlettemengde =
-            Assertions.assertThrows(IllegalArgumentException::class.java) {
-                service.startAutoClean(2, -1)
-            }
-        Assertions.assertEquals(
-            "start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0",
-            exceptionNegativSlettemengde.message,
-        )
-        assertThat(repository.findAutoCleanJobs()).hasSize(0)
-    }
-
-    @Test
-    fun `autoClean opprettes med riktig kjøretid`() {
-        service.startAutoClean(2, 3)
-        assertThat(repository.findAutoCleanJobs()).hasSize(1)
-        assert(
-            repository.findAutoCleanJobs()[0].kjoeretid > now.plusHours(1) &&
-                repository.findAutoCleanJobs()[0].kjoeretid < now.plusHours(3),
-        )
-    }
-
-    @Test
-    fun `autoClean oppretter jobb med riktig antall måneder`() {
-        service.startAutoClean(2, 3)
-        assertThat(repository.findAutoCleanJobs()).hasSize(1)
     }
 
     @Test

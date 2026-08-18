@@ -1,10 +1,10 @@
 package no.nav.hag.utils.bakgrunnsjobb
 
 import com.zaxxer.hikari.HikariDataSource
+import no.nav.hag.utils.bakgrunnsjobb.autoclean.AutoCleanJobbProcessor
 import no.nav.hag.utils.bakgrunnsjobb.config.WithPostgresContainer
 import no.nav.hag.utils.bakgrunnsjobb.config.createHikariConfig
 import no.nav.hag.utils.bakgrunnsjobb.config.migrate
-import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
