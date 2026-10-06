@@ -17,9 +17,19 @@ class BakgrunnsjobbService(
     val bakgrunnsjobbRepository: BakgrunnsjobbRepository,
     interval: Duration = 30.seconds,
     coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
-    val bakgrunnsvarsler: Bakgrunnsvarsler = TomVarsler(),
+    private val vedEndeligFeil: () -> Unit = {},
 ) : RecurringJob(interval, coroutineScope) {
     val prossesserere = HashMap<String, BakgrunnsjobbProsesserer>()
+
+    override fun doJob() {
+        do {
+            val wasEmpty =
+                finnVentende()
+                    .filtrerUtJobberUtenProsessor()
+                    .onEach { prosesser(it.first, it.second) }
+                    .isEmpty()
+        } while (!wasEmpty)
+    }
 
     fun startAutoClean(
         frekvensITimer: Int,
@@ -105,23 +115,12 @@ class BakgrunnsjobbService(
         )
     }
 
-    override fun doJob() {
-        do {
-            val wasEmpty =
-                finnVentende()
-                    .also { logger.debug("Fant ${it.size} bakgrunnsjobber å kjøre") }
-                    .onEach { prosesser(it) }
-                    .isEmpty()
-        } while (!wasEmpty)
-    }
-
-    fun prosesser(jobb: Bakgrunnsjobb) {
+    private fun prosesser(
+        prossessorForType: BakgrunnsjobbProsesserer,
+        jobb: Bakgrunnsjobb,
+    ) {
         val nyBehandlet = LocalDateTime.now()
         val nyttForsoek = jobb.forsoek + 1
-
-        val prossessorForType =
-            prossesserere[jobb.type]
-                ?: throw IllegalArgumentException("Det finnes ingen prossessor for typen '${jobb.type}'. Dette må konfigureres.")
 
         val nesteKjoeretid = prossessorForType.nesteForsoek(nyttForsoek, LocalDateTime.now())
 
@@ -143,7 +142,7 @@ class BakgrunnsjobbService(
                     ex,
                 )
                 STOPPET_JOBB_COUNTER.labels(jobb.type).inc()
-                bakgrunnsvarsler.rapporterPermanentFeiletJobb()
+                vedEndeligFeil()
                 tryStopAction(prossessorForType, jobb)
             } else {
                 logger.error("Jobb ${jobb.uuid} feilet, forsøker igjen $nesteKjoeretid. $responseBodyMessage", ex)
@@ -162,12 +161,26 @@ class BakgrunnsjobbService(
         }
     }
 
-    fun finnVentende(alle: Boolean = false): List<Bakgrunnsjobb> =
+    private fun finnVentende(alle: Boolean = false): List<Bakgrunnsjobb> =
         bakgrunnsjobbRepository.findByKjoeretidBeforeAndStatusIn(
             LocalDateTime.now(),
             setOf(Bakgrunnsjobb.Status.OPPRETTET, Bakgrunnsjobb.Status.FEILET),
             alle,
         )
+
+    private fun List<Bakgrunnsjobb>.filtrerUtJobberUtenProsessor(): List<Pair<BakgrunnsjobbProsesserer, Bakgrunnsjobb>> {
+        val jobberMedProsessor = mapNotNull { prossesserere[it.type]?.to(it) }
+
+        if (size == jobberMedProsessor.size) {
+            logger.debug("Fant $size bakgrunnsjobber å kjøre.")
+        } else {
+            logger.error(
+                "Fant ${jobberMedProsessor.size} bakgrunnsjobber å kjøre. ${size - jobberMedProsessor.size} kunne ikke kjøres pga. manglende prosesserer.",
+            )
+        }
+
+        return jobberMedProsessor
+    }
 
     private fun tryStopAction(
         prossessorForType: BakgrunnsjobbProsesserer,
