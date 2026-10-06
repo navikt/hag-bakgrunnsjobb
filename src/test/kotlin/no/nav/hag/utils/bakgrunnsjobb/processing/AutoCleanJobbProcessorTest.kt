@@ -4,7 +4,7 @@ import kotlinx.coroutines.test.TestScope
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbRepository
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbService
-import no.nav.hag.utils.bakgrunnsjobb.MockBakgrunnsjobbRepository
+import no.nav.hag.utils.bakgrunnsjobb.test.MockBakgrunnsjobbRepository
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

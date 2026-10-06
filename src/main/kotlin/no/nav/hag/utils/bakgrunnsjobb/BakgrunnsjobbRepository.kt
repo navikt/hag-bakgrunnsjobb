@@ -1,11 +1,9 @@
 package no.nav.hag.utils.bakgrunnsjobb
 
-import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
 import java.sql.Connection
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -25,7 +23,6 @@ interface BakgrunnsjobbRepository {
     fun findByKjoeretidBeforeAndStatusIn(
         timeout: LocalDateTime,
         tilstander: Set<Bakgrunnsjobb.Status>,
-        alle: Boolean,
     ): List<Bakgrunnsjobb>
 
     fun delete(uuid: UUID)
@@ -33,53 +30,6 @@ interface BakgrunnsjobbRepository {
     fun deleteAll()
 
     fun deleteOldOkJobs(months: Long)
-}
-
-class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
-    private val jobs = mutableMapOf<UUID, Bakgrunnsjobb>()
-
-    override fun getById(id: UUID): Bakgrunnsjobb? = jobs[id]
-
-    override fun save(bakgrunnsjobb: Bakgrunnsjobb) { // TODO?? mock-impl håndterer ikke duplikater likt som ekte impl
-        jobs[bakgrunnsjobb.uuid] = bakgrunnsjobb
-    }
-
-    override fun update(bakgrunnsjobb: Bakgrunnsjobb) {
-        delete(bakgrunnsjobb.uuid)
-        save(bakgrunnsjobb)
-    }
-
-    override fun findAutoCleanJobs(): List<Bakgrunnsjobb> = jobs.values.filter { it.type == AutoCleanJobbProcessor.JOB_TYPE }
-
-    override fun findOkAutoCleanJobs(): List<Bakgrunnsjobb> = jobs.values.filter { it.type == AutoCleanJobbProcessor.JOB_TYPE }
-
-    override fun findByKjoeretidBeforeAndStatusIn(
-        timeout: LocalDateTime,
-        tilstander: Set<Bakgrunnsjobb.Status>,
-        alle: Boolean,
-    ): List<Bakgrunnsjobb> =
-        jobs.values
-            .filter { tilstander.contains(it.status) }
-            .filter { it.kjoeretid.isBefore(timeout) }
-
-    override fun delete(uuid: UUID) {
-        jobs.remove(uuid)
-    }
-
-    override fun deleteAll() {
-        jobs.clear()
-    }
-
-    override fun deleteOldOkJobs(months: Long) {
-        val someMonthsAgo = LocalDateTime.now().minusMonths(months)
-        jobs.values
-            .filter {
-                it.behandlet?.isBefore(someMonthsAgo) == true && it.status == Bakgrunnsjobb.Status.OK
-            }.map { it.uuid }
-            .forEach {
-                jobs.remove(it)
-            }
-    }
 }
 
 class PostgresBakgrunnsjobbRepository(
@@ -122,18 +72,10 @@ class PostgresBakgrunnsjobbRepository(
     override fun findByKjoeretidBeforeAndStatusIn(
         timeout: LocalDateTime,
         tilstander: Set<Bakgrunnsjobb.Status>,
-        alle: Boolean,
     ): List<Bakgrunnsjobb> {
         val tilstanderArray = tilstander.map(Bakgrunnsjobb.Status::toString).toTypedArray()
 
-        val selectStatement =
-            if (alle) {
-                BakgrunnsjobbTable.selectStatement
-            } else {
-                BakgrunnsjobbTable.selectWithLimitStatement
-            }
-
-        return executeQuery(selectStatement) { con, ps ->
+        return executeQuery(BakgrunnsjobbTable.selectWithLimitStatement) { con, ps ->
             ps.setTimestamp(1, timeout.toTimestamp())
             ps.setArray(2, con.createArrayOf("VARCHAR", tilstanderArray))
         }
@@ -192,8 +134,6 @@ class PostgresBakgrunnsjobbRepository(
     }
 }
 
-private fun LocalDateTime.toTimestamp(): Timestamp = Timestamp.valueOf(this)
-
 private fun ResultSet.tilBakgrunnsjobber(): List<Bakgrunnsjobb> =
     use {
         generateSequence { if (it.next()) it else null }
@@ -211,11 +151,3 @@ private fun ResultSet.tilBakgrunnsjobber(): List<Bakgrunnsjobb> =
                 )
             }.toList()
     }
-
-private fun String.readString(rs: ResultSet): String = rs.getString(this)
-
-private fun String.readInt(rs: ResultSet): Int = rs.getInt(this)
-
-private fun String.readTime(rs: ResultSet): LocalDateTime = rs.getTimestamp(this).toLocalDateTime()
-
-private fun String.readTimeNullable(rs: ResultSet): LocalDateTime? = rs.getTimestamp(this)?.toLocalDateTime()

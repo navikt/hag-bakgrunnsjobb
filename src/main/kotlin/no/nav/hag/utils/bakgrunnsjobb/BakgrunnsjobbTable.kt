@@ -48,15 +48,14 @@ internal object BakgrunnsjobbTable {
         WHERE jobb_id = ?::UUID
         """.trimExcessWhitespace()
 
-    val selectStatement =
+    val selectWithLimitStatement =
         """
         SELECT *
         FROM $TABLE_NAME
         WHERE kjoeretid < ?
           AND status = ANY(?)
+        LIMIT 100
         """.trimExcessWhitespace()
-
-    val selectWithLimitStatement = "$selectStatement LIMIT 100".trimExcessWhitespace()
 
     val selectAutoCleanStatement =
         """
@@ -97,6 +96,4 @@ internal object BakgrunnsjobbTable {
         WHERE status = '${Bakgrunnsjobb.Status.OK}'
           AND behandlet < ?
         """.trimExcessWhitespace()
-
-    private fun String.trimExcessWhitespace() = replace(Regex("\\s+"), " ").trim()
 }
