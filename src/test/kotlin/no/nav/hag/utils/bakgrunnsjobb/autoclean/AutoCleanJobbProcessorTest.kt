@@ -7,6 +7,7 @@ import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbService
 import no.nav.hag.utils.bakgrunnsjobb.MockBakgrunnsjobbRepository
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
@@ -65,6 +66,11 @@ class AutoCleanJobbProcessorTest {
             BakgrunnsjobbService(bakgrunnsjobbRepository, 1.milliseconds, testScope)
                 .also { it.startAsync() }
         autoCleanJobbProcessor = AutoCleanJobbProcessor(bakgrunnsjobbRepository, bakgrunnsjobbService)
+    }
+
+    @AfterEach
+    fun tearDown() {
+        bakgrunnsjobbService.stop()
     }
 
     @Test

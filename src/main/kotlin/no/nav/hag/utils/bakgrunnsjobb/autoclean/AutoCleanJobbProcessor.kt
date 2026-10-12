@@ -28,7 +28,7 @@ class AutoCleanJobbProcessor(
     override val type: String get() = JOB_TYPE
 
     override fun prosesser(jobb: Bakgrunnsjobb) {
-        assert(jobb.data.isNotEmpty())
+        require(jobb.data.isNotEmpty())
         val autocleanRequest = Jackson.fromJson(jobb.data)
         bakgrunnsjobbRepository.deleteOldOkJobs(autocleanRequest.slettEldre)
         startAutoClean(autocleanRequest.interval, autocleanRequest.slettEldre)
@@ -40,7 +40,7 @@ class AutoCleanJobbProcessor(
     ) {
         if (frekvensITimer < 1 || slettEldreEnnMaaneder < 0) {
             logger.info("start autoclean forsøkt startet med ugyldige parametre.")
-            throw IllegalArgumentException("start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0")
+            throw IllegalArgumentException("start autoclean må ha en frekvens større enn eller lik 1 og slettEldreEnnMaaneder større enn eller lik 0")
         } else if (bakgrunnsjobbService.isRunning) {
             val autocleanjobber = bakgrunnsjobbRepository.findAutoCleanJobs()
 
@@ -62,8 +62,8 @@ class AutoCleanJobbProcessor(
                     ),
                 )
             } else {
-                val ekisterendeAutoCleanJobb = autocleanjobber[0]
-                bakgrunnsjobbRepository.delete(ekisterendeAutoCleanJobb.uuid)
+                val eksisterendeAutoCleanJobb = autocleanjobber[0]
+                bakgrunnsjobbRepository.delete(eksisterendeAutoCleanJobb.uuid)
                 startAutoClean(frekvensITimer, slettEldreEnnMaaneder)
             }
         } else {
