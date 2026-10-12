@@ -89,7 +89,7 @@ class AutoCleanJobbProcessorTest {
                 )
             }
         assertEquals(
-            "start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0",
+            "start autoclean må ha en frekvens større enn eller lik 1 og slettEldreEnnMaaneder større enn eller lik 0",
             exceptionNegativFrekvens.message,
         )
         val exceptionNegativSlettemengde =
@@ -101,7 +101,7 @@ class AutoCleanJobbProcessorTest {
                 )
             }
         assertEquals(
-            "start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0",
+            "start autoclean må ha en frekvens større enn eller lik 1 og slettEldreEnnMaaneder større enn eller lik 0",
             exceptionNegativSlettemengde.message,
         )
         assertThat(bakgrunnsjobbRepository.findAutoCleanJobs()).hasSize(0)
