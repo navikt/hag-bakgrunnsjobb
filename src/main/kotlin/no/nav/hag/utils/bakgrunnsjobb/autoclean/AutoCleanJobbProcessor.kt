@@ -40,7 +40,9 @@ class AutoCleanJobbProcessor(
     ) {
         if (frekvensITimer < 1 || slettEldreEnnMaaneder < 0) {
             logger.info("start autoclean forsøkt startet med ugyldige parametre.")
-            throw IllegalArgumentException("start autoclean må ha en frekvens større enn eller lik 1 og slettEldreEnnMaaneder større enn eller lik 0")
+            throw IllegalArgumentException(
+                "start autoclean må ha en frekvens større enn eller lik 1 og slettEldreEnnMaaneder større enn eller lik 0"
+            )
         } else if (bakgrunnsjobbService.isRunning) {
             val autocleanjobber = bakgrunnsjobbRepository.findAutoCleanJobs()
 
