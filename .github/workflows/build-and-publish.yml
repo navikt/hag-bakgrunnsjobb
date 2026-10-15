@@ -10,3 +10,5 @@ jobs:
     uses: navikt/hag-workflows/.github/workflows/build-and-publish.yml@main
     permissions:
       packages: write
+    with:
+      java-version: 25
