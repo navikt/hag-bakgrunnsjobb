@@ -1,6 +1,6 @@
 package no.nav.hag.utils.bakgrunnsjobb
 
-import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
+import no.nav.hag.utils.bakgrunnsjobb.autoclean.AutoCleanJobbProcessor
 
 internal object BakgrunnsjobbTable {
     private const val TABLE_NAME = "bakgrunnsjobb"
