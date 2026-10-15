@@ -33,7 +33,7 @@ interface BakgrunnsjobbRepository {
 }
 
 class PostgresBakgrunnsjobbRepository(
-    val dataSource: DataSource,
+    private val dataSource: DataSource,
 ) : BakgrunnsjobbRepository {
     override fun getById(id: UUID): Bakgrunnsjobb? =
         executeQuery(BakgrunnsjobbTable.selectByIdStatement) {
