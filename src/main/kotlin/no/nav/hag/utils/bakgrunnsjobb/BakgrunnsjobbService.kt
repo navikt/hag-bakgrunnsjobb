@@ -7,8 +7,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonElement
-import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
-import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor.Companion.JOB_TYPE
 import java.time.LocalDateTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -29,44 +27,6 @@ class BakgrunnsjobbService(
                     .onEach { prosesser(it.first, it.second) }
                     .isEmpty()
         } while (!wasEmpty)
-    }
-
-    fun startAutoClean(
-        frekvensITimer: Int,
-        slettEldreEnnMaaneder: Long,
-    ) {
-        if (frekvensITimer < 1 || slettEldreEnnMaaneder < 0) {
-            logger.info("startautoclean forsøkt startet med ugyldige parametre.")
-            throw IllegalArgumentException("start autoclean må ha en frekvens større enn 1 og slettEldreEnnMaander større enn 0")
-        }
-        if (isRunning) {
-            val autocleanjobber = bakgrunnsjobbRepository.findAutoCleanJobs()
-
-            if (autocleanjobber.isEmpty()) {
-                val data =
-                    Jackson.toJson(
-                        AutoCleanJobbProcessor.JobbData(
-                            slettEldre = slettEldreEnnMaaneder,
-                            interval = frekvensITimer,
-                        ),
-                    )
-
-                bakgrunnsjobbRepository.save(
-                    Bakgrunnsjobb(
-                        kjoeretid = LocalDateTime.now().plusHours(frekvensITimer.toLong()),
-                        maksAntallForsoek = 10,
-                        data = data,
-                        type = JOB_TYPE,
-                    ),
-                )
-            } else {
-                val ekisterendeAutoCleanJobb = autocleanjobber[0]
-                bakgrunnsjobbRepository.delete(ekisterendeAutoCleanJobb.uuid)
-                startAutoClean(frekvensITimer, slettEldreEnnMaaneder)
-            }
-        } else {
-            logger.warn("BakgrunnsjobbService er stoppet, kjører ikke autoclean!")
-        }
     }
 
     fun registrer(prosesserer: BakgrunnsjobbProsesserer) {
@@ -161,11 +121,10 @@ class BakgrunnsjobbService(
         }
     }
 
-    private fun finnVentende(alle: Boolean = false): List<Bakgrunnsjobb> =
+    private fun finnVentende(): List<Bakgrunnsjobb> =
         bakgrunnsjobbRepository.findByKjoeretidBeforeAndStatusIn(
             LocalDateTime.now(),
             setOf(Bakgrunnsjobb.Status.OPPRETTET, Bakgrunnsjobb.Status.FEILET),
-            alle,
         )
 
     private fun List<Bakgrunnsjobb>.filtrerUtJobberUtenProsessor(): List<Pair<BakgrunnsjobbProsesserer, Bakgrunnsjobb>> {

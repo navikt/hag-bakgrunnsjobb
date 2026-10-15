@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.serialization")
     id("org.jmailen.kotlinter")
     id("maven-publish")
+    id("java-test-fixtures")
 }
 
 kotlin {
@@ -58,6 +59,7 @@ dependencies {
     val prometheusVersion: String by project
     val slf4jVersion: String by project
     val testcontainersVersion: String by project
+    val utilsVersion: String by project
 
     api("org.jetbrains.exposed:exposed-core:$exposedVersion")
     api("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
@@ -69,6 +71,7 @@ dependencies {
 
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.prometheus:simpleclient_common:$prometheusVersion")
+    implementation("no.nav.helsearbeidsgiver:utils:$utilsVersion")
     implementation("tools.jackson.core:jackson-databind:$jacksonVersion")
     implementation("tools.jackson.module:jackson-module-kotlin:$jacksonVersion")
 

@@ -1,10 +1,10 @@
 package no.nav.hag.utils.bakgrunnsjobb
 
 import com.zaxxer.hikari.HikariDataSource
+import no.nav.hag.utils.bakgrunnsjobb.autoclean.AutoCleanJobbProcessor
 import no.nav.hag.utils.bakgrunnsjobb.config.WithPostgresContainer
 import no.nav.hag.utils.bakgrunnsjobb.config.createHikariConfig
 import no.nav.hag.utils.bakgrunnsjobb.config.migrate
-import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
@@ -51,7 +51,7 @@ class PostgresBakgrunnsjobbRepositoryTest : WithPostgresContainer() {
 
         repo.save(bakgrunnsjobb)
 
-        val jobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.OPPRETTET), true)
+        val jobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.OPPRETTET))
         assertThat(jobs).hasSize(1)
 
         val job = jobs.first()
@@ -71,12 +71,12 @@ class PostgresBakgrunnsjobbRepositoryTest : WithPostgresContainer() {
             ),
         )
 
-        val failedJobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.FEILET), true)
+        val failedJobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.FEILET))
         assertThat(failedJobs).hasSize(1)
 
         repo.delete(job.uuid)
 
-        val noJobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.FEILET), true)
+        val noJobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.FEILET))
         assertThat(noJobs).isEmpty()
     }
 
@@ -124,7 +124,7 @@ class PostgresBakgrunnsjobbRepositoryTest : WithPostgresContainer() {
 
         repo.save(bakgrunnsjobb)
 
-        val jobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.OPPRETTET), true)
+        val jobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.OPPRETTET))
         assertThat(jobs).hasSize(1)
         assertThat(jobs.first().behandlet).isNull()
     }
