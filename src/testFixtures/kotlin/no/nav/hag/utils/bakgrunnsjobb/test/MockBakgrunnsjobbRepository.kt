@@ -2,7 +2,7 @@ package no.nav.hag.utils.bakgrunnsjobb.test
 
 import no.nav.hag.utils.bakgrunnsjobb.Bakgrunnsjobb
 import no.nav.hag.utils.bakgrunnsjobb.BakgrunnsjobbRepository
-import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
+import no.nav.hag.utils.bakgrunnsjobb.autoclean.AutoCleanJobbProcessor
 import java.time.LocalDateTime
 import java.util.UUID
 
