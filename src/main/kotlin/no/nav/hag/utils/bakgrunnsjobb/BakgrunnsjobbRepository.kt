@@ -1,6 +1,6 @@
 package no.nav.hag.utils.bakgrunnsjobb
 
-import no.nav.hag.utils.bakgrunnsjobb.processing.AutoCleanJobbProcessor
+import no.nav.hag.utils.bakgrunnsjobb.autoclean.AutoCleanJobbProcessor
 import java.sql.Connection
 import java.sql.Date
 import java.sql.PreparedStatement
