@@ -66,14 +66,13 @@ class ExposedBakgrunnsjobRepository(
     override fun findByKjoeretidBeforeAndStatusIn(
         timeout: LocalDateTime,
         tilstander: Set<Bakgrunnsjobb.Status>,
-        alle: Boolean,
     ): List<Bakgrunnsjobb> =
         transaction(db) {
-            val query = ExposedBakgrunnsjobb.selectAll().where { (kjoeretid lessEq timeout) and (status inList tilstander) }
-            if (!alle) {
-                query.limit(100)
-            }
-            query.map { it.toBakgrunnsjobb() }
+            ExposedBakgrunnsjobb
+                .selectAll()
+                .where { (kjoeretid lessEq timeout) and (status inList tilstander) }
+                .limit(100)
+                .map { it.toBakgrunnsjobb() }
         }
 
     override fun delete(uuid: UUID) {

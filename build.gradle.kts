@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.serialization")
     id("org.jmailen.kotlinter")
     id("maven-publish")
+    id("java-test-fixtures")
 }
 
 kotlin {
