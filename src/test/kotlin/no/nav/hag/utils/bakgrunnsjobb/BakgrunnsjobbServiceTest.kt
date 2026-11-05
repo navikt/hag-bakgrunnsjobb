@@ -132,6 +132,54 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
         assertThat(jobber[0].data).isEqualTo(data)
     }
 
+    @Test
+    fun `kjører ikke jobber når pod ikke er leder`() {
+        val ikkeLederScope = TestScope()
+        val ikkeLederService =
+            BakgrunnsjobbService(repository, 1.milliseconds, ikkeLederScope, leaderConfig = { false })
+        ikkeLederService.registrer(eksempelProsesserer)
+        service.stop()
+        ikkeLederService.startAsync(true)
+
+        val testJobb =
+            Bakgrunnsjobb(
+                type = EksempelProsesserer.JOBB_TYPE,
+                data = """{"status": "ok"}""",
+            )
+        repository.save(testJobb)
+        ikkeLederScope.testScheduler.apply {
+            advanceTimeBy(1)
+            runCurrent()
+        }
+        ikkeLederService.stop()
+
+        assertThat(repository.getById(testJobb.uuid)?.status).isEqualTo(Bakgrunnsjobb.Status.OPPRETTET)
+    }
+
+    @Test
+    fun `kjører jobber når pod er leder`() {
+        val lederScope = TestScope()
+        val lederService =
+            BakgrunnsjobbService(repository, 1.milliseconds, lederScope, leaderConfig = { true })
+        lederService.registrer(eksempelProsesserer)
+        service.stop()
+        lederService.startAsync(true)
+
+        val testJobb =
+            Bakgrunnsjobb(
+                type = EksempelProsesserer.JOBB_TYPE,
+                data = """{"status": "ok"}""",
+            )
+        repository.save(testJobb)
+        lederScope.testScheduler.apply {
+            advanceTimeBy(1)
+            runCurrent()
+        }
+        lederService.stop()
+
+        assertThat(repository.getById(testJobb.uuid)?.status).isEqualTo(Bakgrunnsjobb.Status.OK)
+    }
+
     @AfterEach
     fun teardown() {
         repository.deleteAll()

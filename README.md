@@ -29,6 +29,19 @@ bgService.registrer(MinProcessor())
 bgService.startAsync(retryOnFail = true)
 ```
 
+## Kjøre på flere podder (leader election)
+
+Som standard kjører alle podder bakgrunnsjobber (`AlltidLeader`). Kjører appen på flere podder,
+kan du sende inn en egen `LeaderConfig`, slik at bare leder-podden kjører jobber.
+Opprettelse av jobber fungerer fortsatt fra alle podder:
+
+```
+val bgService = BakgrunnsjobbService(repository, leaderConfig = MinNaisLeaderConfig)
+```
+
+Med Nais setter du `leaderElection: true` i nais.yaml og slår opp leder via `ELECTOR_GET_URL`
+(se [Nais-dokumentasjonen](https://doc.nais.io/services/leader-election/)).
+
 ---
 
 # Releasing
