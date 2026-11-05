@@ -45,7 +45,7 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
         val ider =
             List(1000) {
                 val uuid = UUID.randomUUID()
-                val data = """{"status": "ok", "uuid": "$uuid" }"""
+                val data = """{"dokumentId": "123", "uuid": "$uuid" }"""
                 val testJobb =
                     Bakgrunnsjobb(
                         type = EksempelProsesserer.JOBB_TYPE,
@@ -70,7 +70,7 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
 
     @Test
     fun `sett jobb til ok hvis ingen feil `() {
-        val data = """{"status": "ok"}"""
+        val data = """{"dokumentId": "123"}"""
         val testJobb =
             Bakgrunnsjobb(
                 type = EksempelProsesserer.JOBB_TYPE,
@@ -118,7 +118,7 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
 
     @Test
     fun `opprett lager korrekt jobb`() {
-        val data = """{"status": "ok"}"""
+        val data = """{"dokumentId": "123"}"""
         dataSource.connection.use {
             service.opprettJobb<EksempelProsesserer>(data = data)
         }
@@ -144,7 +144,7 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
         val testJobb =
             Bakgrunnsjobb(
                 type = EksempelProsesserer.JOBB_TYPE,
-                data = """{"status": "ok"}""",
+                data = """{"dokumentId": "123"}""",
             )
         repository.save(testJobb)
         ikkeLederScope.testScheduler.apply {
@@ -168,7 +168,7 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
         val testJobb =
             Bakgrunnsjobb(
                 type = EksempelProsesserer.JOBB_TYPE,
-                data = """{"status": "ok"}""",
+                data = """{"dokumentId": "123"}""",
             )
         repository.save(testJobb)
         lederScope.testScheduler.apply {
