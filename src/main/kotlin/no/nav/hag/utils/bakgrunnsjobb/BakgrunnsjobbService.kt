@@ -15,11 +15,16 @@ class BakgrunnsjobbService(
     val bakgrunnsjobbRepository: BakgrunnsjobbRepository,
     interval: Duration = 30.seconds,
     coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    private val leaderConfig: LeaderConfig = AlltidLeader,
     private val vedEndeligFeil: () -> Unit = {},
 ) : RecurringJob(interval, coroutineScope) {
     val prossesserere = HashMap<String, BakgrunnsjobbProsesserer>()
 
     override fun doJob() {
+        if (!leaderConfig.isElectedLeader()) {
+            logger.debug("Pod er ikke leder - kjører ikke bakgrunnsjobber.")
+            return
+        }
         do {
             val wasEmpty =
                 finnVentende()
