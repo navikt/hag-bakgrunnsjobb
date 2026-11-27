@@ -54,6 +54,7 @@ internal object BakgrunnsjobbTable {
         FROM $TABLE_NAME
         WHERE kjoeretid < ?
           AND status = ANY(?)
+        ORDER BY opprettet
         LIMIT 100
         """.trimExcessWhitespace()
 

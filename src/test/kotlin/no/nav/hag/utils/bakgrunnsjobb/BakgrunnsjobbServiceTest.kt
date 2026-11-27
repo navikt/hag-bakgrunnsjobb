@@ -7,6 +7,7 @@ import no.nav.hag.utils.bakgrunnsjobb.config.WithPostgresContainer
 import no.nav.hag.utils.bakgrunnsjobb.config.createHikariConfig
 import no.nav.hag.utils.bakgrunnsjobb.config.migrate
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -117,6 +120,76 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
     }
 
     @Test
+    fun `utsatt jobb beholder status og forsøk og får ny kjøretid`() {
+        val testJobb =
+            Bakgrunnsjobb(
+                type = EksempelProsesserer.JOBB_TYPE,
+                data = """{"status": "utsett"}""",
+            )
+        repository.save(testJobb)
+        testCoroutineScope.testScheduler.apply {
+            advanceTimeBy(1)
+            runCurrent()
+        }
+
+        val utsattJobb = repository.getById(testJobb.uuid)
+        assertThat(utsattJobb?.status).isEqualTo(Bakgrunnsjobb.Status.OPPRETTET)
+        assertThat(utsattJobb?.forsoek).isEqualTo(0)
+        assertThat(utsattJobb?.behandlet).isNull()
+        assertThat(utsattJobb?.kjoeretid).isAfter(LocalDateTime.now().plusMinutes(59))
+    }
+
+    @Test
+    fun `ny jobb utsettes når eldre jobb feiler, og eldre jobb prosesseres først`() {
+        val rekkefoelgeProsesserer = RekkefoelgeProsesserer(repository)
+        service.registrer(rekkefoelgeProsesserer)
+
+        val jobbA =
+            Bakgrunnsjobb(
+                type = RekkefoelgeProsesserer.JOBB_TYPE,
+                opprettet = now.minusMinutes(2),
+                kjoeretid = now.minusMinutes(2),
+                maksAntallForsoek = 3,
+                data = """{"status": "fail"}""",
+            )
+        val jobbB =
+            Bakgrunnsjobb(
+                type = RekkefoelgeProsesserer.JOBB_TYPE,
+                opprettet = now.minusMinutes(1),
+                kjoeretid = now.minusMinutes(1),
+                data = """{"venterPaa": "${jobbA.uuid}"}""",
+            )
+        rekkefoelgeProsesserer.venterPaa = jobbA.uuid
+
+        // Lagres i omvendt rekkefølge for å vise at jobbene plukkes etter opprettet.
+        repository.save(jobbB)
+        repository.save(jobbA)
+
+        testCoroutineScope.testScheduler.apply {
+            advanceTimeBy(1)
+            runCurrent()
+        }
+
+        assertThat(rekkefoelgeProsesserer.prosesserteJobber).containsExactly(jobbA.uuid, jobbB.uuid)
+
+        val feiletJobbA = repository.getById(jobbA.uuid)
+        assertThat(feiletJobbA?.status).isEqualTo(Bakgrunnsjobb.Status.FEILET)
+        assertThat(feiletJobbA?.forsoek).isEqualTo(1)
+
+        val utsattJobbB = repository.getById(jobbB.uuid)
+        assertThat(utsattJobbB?.status).isEqualTo(Bakgrunnsjobb.Status.OPPRETTET)
+        assertThat(utsattJobbB?.forsoek).isEqualTo(0)
+        assertThat(utsattJobbB?.behandlet).isNull()
+        assertThat(utsattJobbB?.kjoeretid).isAfter(LocalDateTime.now().plusMinutes(59))
+    }
+
+    @Test
+    fun `utsettelse må være positiv`() {
+        assertThatThrownBy { UtsettJobbException(Duration.ZERO, "vent") }
+            .isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
     fun `opprett lager korrekt jobb`() {
         val data = """{"dokumentId": "123"}"""
         dataSource.connection.use {
@@ -186,6 +259,30 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
     }
 }
 
+class RekkefoelgeProsesserer(
+    private val repository: BakgrunnsjobbRepository,
+) : BakgrunnsjobbProsesserer {
+    companion object {
+        const val JOBB_TYPE = "REKKEFOELGE_TYPE"
+    }
+
+    var venterPaa: UUID? = null
+    val prosesserteJobber = mutableListOf<UUID>()
+
+    override val type = JOBB_TYPE
+
+    override fun prosesser(jobb: Bakgrunnsjobb) {
+        prosesserteJobber.add(jobb.uuid)
+        if (jobb.data == """{"status": "fail"}""") {
+            throw RuntimeException()
+        }
+        val eldreJobb = venterPaa?.let(repository::getById)
+        if (eldreJobb != null && eldreJobb.status != Bakgrunnsjobb.Status.OK) {
+            throw UtsettJobbException(1.hours, "Venter på ${eldreJobb.uuid}")
+        }
+    }
+}
+
 class EksempelProsesserer : BakgrunnsjobbProsesserer {
     companion object {
         const val JOBB_TYPE = "TEST_TYPE"
@@ -198,6 +295,9 @@ class EksempelProsesserer : BakgrunnsjobbProsesserer {
     override fun prosesser(jobb: Bakgrunnsjobb) {
         if (jobb.data == """{"status": "fail"}""") {
             throw RuntimeException()
+        }
+        if (jobb.data == """{"status": "utsett"}""") {
+            throw UtsettJobbException(1.hours, "Venter")
         }
     }
 

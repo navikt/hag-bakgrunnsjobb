@@ -10,6 +10,7 @@ import kotlinx.serialization.json.JsonElement
 import java.time.LocalDateTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 class BakgrunnsjobbService(
     val bakgrunnsjobbRepository: BakgrunnsjobbRepository,
@@ -90,11 +91,17 @@ class BakgrunnsjobbService(
         val nesteKjoeretid = prossessorForType.nesteForsoek(nyttForsoek, LocalDateTime.now())
 
         var nyStatus = jobb.status
+        var utsattJobb: Bakgrunnsjobb? = null
 
         try {
             prossessorForType.prosesser(jobb)
             nyStatus = Bakgrunnsjobb.Status.OK
             OK_JOBB_COUNTER.labels(jobb.type).inc()
+        } catch (utsett: UtsettJobbException) {
+            val nyKjoeretid = LocalDateTime.now().plus(utsett.utsettelse.toJavaDuration())
+            logger.info("Jobb ${jobb.uuid} ble utsatt til $nyKjoeretid. ${utsett.message}")
+            UTSATT_JOBB_COUNTER.labels(jobb.type).inc()
+            utsattJobb = jobb.copy(kjoeretid = nyKjoeretid)
         } catch (ex: Throwable) {
             val responseBody = tryGetResponseBody(ex)
             val responseBodyMessage = responseBody?.let { "Feil fra ekstern tjeneste: $it" }.orEmpty()
@@ -115,7 +122,7 @@ class BakgrunnsjobbService(
             }
         } finally {
             val oppdatertJobb =
-                jobb.copy(
+                utsattJobb ?: jobb.copy(
                     behandlet = nyBehandlet,
                     status = nyStatus,
                     kjoeretid = nesteKjoeretid,
@@ -184,6 +191,15 @@ private val STOPPET_JOBB_COUNTER =
         .name("stoppet_jobb")
         .labelNames("jobbtype")
         .help("Teller jobber som har feilet permanent og må følges opp")
+        .register()
+
+private val UTSATT_JOBB_COUNTER =
+    Counter
+        .build()
+        .namespace("helsearbeidsgiver")
+        .name("utsatt_jobb")
+        .labelNames("jobbtype")
+        .help("Teller jobber som har blitt utsatt uten at det regnes som et forsøk")
         .register()
 
 private val OK_JOBB_COUNTER =
