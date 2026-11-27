@@ -140,7 +140,7 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
     }
 
     @Test
-    fun `ny jobb utsettes når eldre jobb feiler, og eldre jobb prosesseres først`() {
+    fun `ny jobb utsettes når eldre jobb ikke er ferdig`() {
         val rekkefoelgeProsesserer = RekkefoelgeProsesserer(repository)
         service.registrer(rekkefoelgeProsesserer)
 
@@ -161,16 +161,15 @@ class BakgrunnsjobbServiceTest : WithPostgresContainer() {
             )
         rekkefoelgeProsesserer.venterPaa = jobbA.uuid
 
-        // Lagres i omvendt rekkefølge for å vise at jobbene plukkes etter opprettet.
-        repository.save(jobbB)
         repository.save(jobbA)
+        repository.save(jobbB)
 
         testCoroutineScope.testScheduler.apply {
             advanceTimeBy(1)
             runCurrent()
         }
 
-        assertThat(rekkefoelgeProsesserer.prosesserteJobber).containsExactly(jobbA.uuid, jobbB.uuid)
+        assertThat(rekkefoelgeProsesserer.prosesserteJobber).containsExactlyInAnyOrder(jobbA.uuid, jobbB.uuid)
 
         val feiletJobbA = repository.getById(jobbA.uuid)
         assertThat(feiletJobbA?.status).isEqualTo(Bakgrunnsjobb.Status.FEILET)

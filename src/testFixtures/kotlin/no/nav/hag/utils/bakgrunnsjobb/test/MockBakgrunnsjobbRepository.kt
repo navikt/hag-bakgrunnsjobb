@@ -31,7 +31,6 @@ class MockBakgrunnsjobbRepository : BakgrunnsjobbRepository {
         jobs.values
             .filter { tilstander.contains(it.status) }
             .filter { it.kjoeretid.isBefore(timeout) }
-            .sortedBy { it.opprettet }
 
     override fun delete(uuid: UUID) {
         jobs.remove(uuid)

@@ -42,9 +42,7 @@ val bgService = BakgrunnsjobbService(repository, leaderConfig = MinNaisLeaderCon
 Med Nais setter du `leaderElection: true` i nais.yaml og slår opp leder via `ELECTOR_GET_URL`
 (se [Nais-dokumentasjonen](https://doc.nais.io/services/leader-election/)).
 
-## Rekkefølge og utsettelse
-
-Ventende jobber plukkes i rekkefølgen de ble opprettet (`opprettet`).
+## Utsettelse
 
 En prosesserer kan utsette en jobb ved å kaste `UtsettJobbException`. Jobben beholder da status og antall forsøk,
 og kjøres igjen tidligst etter angitt utsettelse. Nyttig når en jobb må vente på at andre jobber blir ferdige:

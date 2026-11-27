@@ -34,19 +34,6 @@ class PostgresBakgrunnsjobbRepositoryTest : WithPostgresContainer() {
     }
 
     @Test
-    fun `findByKjoeretidBeforeAndStatusIn returnerer jobber sortert på opprettet`() {
-        val eldst = Bakgrunnsjobb(type = "test", opprettet = now.minusMinutes(3), kjoeretid = now, data = "{}")
-        val midt = Bakgrunnsjobb(type = "test", opprettet = now.minusMinutes(2), kjoeretid = now, data = "{}")
-        val nyest = Bakgrunnsjobb(type = "test", opprettet = now.minusMinutes(1), kjoeretid = now, data = "{}")
-
-        listOf(nyest, eldst, midt).forEach(repo::save)
-
-        val jobs = repo.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.OPPRETTET))
-
-        assertThat(jobs.map { it.uuid }).containsExactly(eldst.uuid, midt.uuid, nyest.uuid)
-    }
-
-    @Test
     fun `Lagre Les Oppdater Slett`() {
         val uuid = UUID.randomUUID()
         val bakgrunnsjobb =

@@ -75,22 +75,6 @@ class ExposedBakgrunnsjobRepositoryTest : WithPostgresContainer() {
     }
 
     @Test
-    fun `findByKjoeretidBeforeAndStatusIn returnerer jobber sortert på opprettet`() {
-        transaction {
-            val now = LocalDateTime.now()
-            val eldst = Bakgrunnsjobb(type = "test", opprettet = now.minusMinutes(3), kjoeretid = now, dataJson = buildJsonObject {})
-            val midt = Bakgrunnsjobb(type = "test", opprettet = now.minusMinutes(2), kjoeretid = now, dataJson = buildJsonObject {})
-            val nyest = Bakgrunnsjobb(type = "test", opprettet = now.minusMinutes(1), kjoeretid = now, dataJson = buildJsonObject {})
-
-            listOf(nyest, eldst, midt).forEach(repository::save)
-
-            val jobs = repository.findByKjoeretidBeforeAndStatusIn(now.plusHours(1), setOf(Bakgrunnsjobb.Status.OPPRETTET))
-
-            assertEquals(listOf(eldst.uuid, midt.uuid, nyest.uuid), jobs.map { it.uuid })
-        }
-    }
-
-    @Test
     fun `getById returer null hvis jobben ikke finnes`() {
         transaction {
             // Given: A random UUID that doesn't exist

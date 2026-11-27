@@ -12,7 +12,6 @@ import no.nav.hag.utils.bakgrunnsjobb.exposed.ExposedBakgrunnsjobb.opprettet
 import no.nav.hag.utils.bakgrunnsjobb.exposed.ExposedBakgrunnsjobb.status
 import no.nav.hag.utils.bakgrunnsjobb.exposed.ExposedBakgrunnsjobb.type
 import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
@@ -72,7 +71,6 @@ class ExposedBakgrunnsjobRepository(
             ExposedBakgrunnsjobb
                 .selectAll()
                 .where { (kjoeretid lessEq timeout) and (status inList tilstander) }
-                .orderBy(opprettet to SortOrder.ASC)
                 .limit(100)
                 .map { it.toBakgrunnsjobb() }
         }
